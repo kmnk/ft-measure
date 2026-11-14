@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 /// キーの名前 → 値。
 pub type Snapshot = BTreeMap<String, f32>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Key {
     Measure,
     Next,
