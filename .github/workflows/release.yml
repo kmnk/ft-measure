@@ -30,11 +30,10 @@ jobs:
         shell: pwsh
         run: |
           $dumpbin = Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Recurse -Filter dumpbin.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($dumpbin) {
-            $deps = & $dumpbin.FullName /dependents target/release/ft-measure.exe
-            $deps
-            if ($deps -match "VCRUNTIME") { throw "ft-measure.exe depends on the VC runtime" }
-          }
+          if (-not $dumpbin) { throw "dumpbin.exe was not found; cannot check the VC runtime dependency" }
+          $deps = & $dumpbin.FullName /dependents target/release/ft-measure.exe
+          $deps
+          if ($deps -match "VCRUNTIME") { throw "ft-measure.exe depends on the VC runtime" }
       - uses: actions/upload-artifact@v4
         with:
           name: ft-measure-windows-x64

@@ -72,6 +72,9 @@ struct Args {
     /// 試験用: 鳴らした音を画面に出す
     #[arg(long, hide = true)]
     echo_sounds: bool,
+    /// 試験用: 前回の名前を残すファイル（既定は exe の隣の ft-measure-last.txt）
+    #[arg(long, hide = true)]
+    last_file: Option<PathBuf>,
 }
 
 fn exe_dir() -> PathBuf {
@@ -156,7 +159,7 @@ fn run(args: Args) -> i32 {
     say(&format!("項目の一覧: {items_label}（{} 項目）", item_list.len()));
 
     // 名前とメモ（raw の状態にする前に、行で聞く）
-    let last_path = dir.join("ft-measure-last.txt");
+    let last_path = args.last_file.clone().unwrap_or_else(|| dir.join("ft-measure-last.txt"));
     let last = std::fs::read_to_string(&last_path).map(|s| s.trim().to_string()).unwrap_or_default();
     let mut device = prompt("名前（例 selfie、vive）", &last);
     if device.is_empty() {
@@ -191,7 +194,8 @@ fn run(args: Args) -> i32 {
     let mut chat = if args.no_chatbox {
         None
     } else {
-        let dest = format!("{}:{}", args.host, args.chatbox_port).parse().expect("chatbox の宛先");
+        // chatbox は VRChat の入力（同じ PC の 127.0.0.1）へ送る。受け口の --host とは別
+        let dest = std::net::SocketAddr::from(([127, 0, 0, 1], args.chatbox_port));
         Chatbox::new(dest, Duration::from_secs_f64(args.chatbox_interval.max(0.0))).ok()
     };
 
@@ -205,7 +209,7 @@ fn run(args: Args) -> i32 {
     let mut source: Box<dyn KeySource> = match &args.script {
         Some(p) => {
             let text = std::fs::read_to_string(p).unwrap_or_default();
-            let target = format!("{}:{}", args.host, args.port).parse().expect("受け口");
+            let target = std::net::SocketAddr::from(([127, 0, 0, 1], args.port));
             match ScriptKeys::parse(&text, target) {
                 Ok(s) => Box::new(s),
                 Err(e) => {

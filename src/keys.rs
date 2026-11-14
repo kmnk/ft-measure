@@ -35,12 +35,45 @@ pub fn map_key(ev: &KeyEvent) -> Option<Input> {
     }
 }
 
-pub struct TerminalKeys;
+/// 押しっぱなしの自動の繰り返しを捨てる。
+/// Windows のコンソールは押し続ける間 key down を繰り返し送り、crossterm はそれを全部 Press にするので、
+/// 離した出来事（Release）が届く端末では、離すまでの 2 回目以降の Press を捨てる。
+/// Release が届かない端末（多くの Unix の端末）では、Press をそのまま数える。
+#[derive(Default)]
+pub struct RepeatFilter {
+    held: std::collections::HashSet<KeyCode>,
+    saw_release: bool,
+}
+
+impl RepeatFilter {
+    /// この出来事を入力として数えるか。
+    pub fn accept(&mut self, ev: &KeyEvent) -> bool {
+        match ev.kind {
+            KeyEventKind::Release => {
+                self.saw_release = true;
+                self.held.remove(&ev.code);
+                false
+            }
+            KeyEventKind::Repeat => false,
+            KeyEventKind::Press => {
+                if self.saw_release && self.held.contains(&ev.code) {
+                    return false;
+                }
+                self.held.insert(ev.code);
+                true
+            }
+        }
+    }
+}
+
+pub struct TerminalKeys {
+    filter: RepeatFilter,
+}
 
 impl TerminalKeys {
     pub fn new() -> std::io::Result<Self> {
         crossterm::terminal::enable_raw_mode()?;
-        Ok(TerminalKeys)
+        Ok(TerminalKeys { filter: RepeatFilter::default() })
     }
 }
 
@@ -56,8 +89,10 @@ impl KeySource for TerminalKeys {
         let mut wait = timeout;
         while let Ok(true) = event::poll(wait) {
             if let Ok(Event::Key(k)) = event::read() {
-                if let Some(i) = map_key(&k) {
-                    out.push(i);
+                if self.filter.accept(&k) {
+                    if let Some(i) = map_key(&k) {
+                        out.push(i);
+                    }
                 }
             }
             wait = Duration::ZERO;
@@ -176,6 +211,27 @@ mod tests {
         assert_eq!(map_key(&release), None);
         let ctrl_c = KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL);
         assert_eq!(map_key(&ctrl_c), Some(Input::Quit));
+    }
+
+    #[test]
+    fn keys_repeat_filter_drops_auto_repeat_when_releases_arrive() {
+        let space = press(KeyCode::Char(' '));
+        let mut up = press(KeyCode::Char(' '));
+        up.kind = KeyEventKind::Release;
+        // Windows: 押す、押し続けて繰り返し 2 回、離す、もう一度押す → 2 回だけ数える
+        let mut f = RepeatFilter::default();
+        let n = [&space, &up, &space, &space, &space, &up, &space]
+            .iter()
+            .filter(|e| f.accept(e))
+            .count();
+        assert_eq!(n, 3);
+        let mut f = RepeatFilter::default();
+        let seq = [&space, &up, &space, &space, &space, &up];
+        let n = seq.iter().filter(|e| f.accept(e)).count();
+        assert_eq!(n, 2, "繰り返しが数えられている");
+        // Release が届かない端末では、押すたびに数える
+        let mut f = RepeatFilter::default();
+        assert_eq!([&space, &space, &space].iter().filter(|e| f.accept(e)).count(), 3);
     }
 
     #[test]

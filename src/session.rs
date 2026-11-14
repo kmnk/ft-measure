@@ -143,7 +143,7 @@ impl Session {
         match key {
             Key::Measure => self.measure(t, time, snap, recent),
             Key::Undo => self.undo(),
-            Key::Next => self.next(t),
+            Key::Next => self.next(t, time),
         }
     }
 
@@ -219,10 +219,10 @@ impl Session {
         }
     }
 
-    fn next(&mut self, t: f64) -> Vec<Event> {
+    fn next(&mut self, t: f64, time: DateTime<Local>) -> Vec<Event> {
         let mut ev = Vec::new();
         if self.is_recording() {
-            ev.extend(self.measure(t, Local::now(), &Snapshot::new(), &[]));
+            ev.extend(self.measure(t, time, &Snapshot::new(), &[]));
         }
         if self.idx + 1 >= self.items.len() {
             self.finished = true;

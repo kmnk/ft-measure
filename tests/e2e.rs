@@ -61,6 +61,7 @@ fn run(dir: &Path, items: &str, script: &str, stdin: &str, port: u16, chat_port:
         .arg("--items").arg(&items_path)
         .arg("--out").arg(dir.join("out"))
         .arg("--script").arg(&script_path)
+        .arg("--last-file").arg(dir.parent().unwrap().join("last.txt"))
         .arg("--echo-sounds")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -188,6 +189,7 @@ fn e2e_full_run_last_name_and_kill() {
         .arg("--items").arg(d3.join("items.txt"))
         .arg("--out").arg(d3.join("out"))
         .arg("--script").arg(d3.join("script.txt"))
+        .arg("--last-file").arg(tmp.path().join("last.txt"))
         .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .spawn()
@@ -209,6 +211,24 @@ fn e2e_full_run_last_name_and_kill() {
     assert!(seen, "止める前の記録が summary.csv に出なかった");
     let raw3 = std::fs::read_to_string(find(&d3.join("out"), "_raw.jsonl").unwrap()).unwrap();
     assert!(raw3.lines().any(|l| l.contains("\"type\":\"pose\"") && l.contains("0.4")), "{raw3}");
+}
+
+#[test]
+fn e2e_host_name_does_not_crash() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join("s.txt"), "quit\n").unwrap();
+    let mut child = Command::new(EXE)
+        .args(["--host", "localhost", "--port", "19108", "--chatbox-port", "19109"])
+        .arg("--script").arg(tmp.path().join("s.txt"))
+        .arg("--out").arg(tmp.path().join("out"))
+        .arg("--last-file").arg(tmp.path().join("last.txt"))
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.take().unwrap().write_all(b"host-dev\n\n").unwrap();
+    let out = child.wait_with_output().unwrap();
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stdout));
 }
 
 #[test]
