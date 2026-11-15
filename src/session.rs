@@ -19,7 +19,6 @@ pub enum Key {
 #[derive(Debug, Clone)]
 pub struct Config {
     pub reps: usize,
-    pub move_threshold: f64,
 }
 
 /// 1 回の測定。
@@ -29,7 +28,6 @@ pub struct Rec {
     pub values: Snapshot,
     /// 直前の拾いの列での、キーごとの最大 − 最小
     pub spread: BTreeMap<String, f64>,
-    pub moving: bool,
     /// 順に作る表情の向きの番号（それ以外は 0）
     pub dir: usize,
 }
@@ -53,7 +51,7 @@ pub enum Record {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
     /// 1 回を記録した。rep は 1 から、of は決まりの回数
-    Recorded { label: String, rep: usize, of: usize, moving: bool, keys: usize },
+    Recorded { label: String, rep: usize, of: usize, keys: usize },
     /// 記録しなかった、または何もしなかった
     Warn(String),
     Undone { label: String },
@@ -179,7 +177,6 @@ impl Session {
                     return vec![Event::Warn(tr("No FT values have arrived yet. Nothing was recorded", "値がまだ 1 つも届いていません。記録しませんでした").into())];
                 }
                 let sp = spread(recent, snap);
-                let moving = sp.values().any(|d| *d > self.cfg.move_threshold);
                 let (label, dir, list) = match rec {
                     Record::Pose(list) => (name.clone(), 0, list),
                     Record::Sequence(list) => {
@@ -188,9 +185,9 @@ impl Session {
                     }
                     Record::Interval { .. } => unreachable!(),
                 };
-                list.push(Rec { time, values: snap.clone(), spread: sp, moving, dir });
+                list.push(Rec { time, values: snap.clone(), spread: sp, dir });
                 let rep = list.iter().filter(|r| r.dir == dir).count();
-                vec![Event::Recorded { label, rep, of: reps, moving, keys: snap.len() }, Event::Changed]
+                vec![Event::Recorded { label, rep, of: reps, keys: snap.len() }, Event::Changed]
             }
         }
     }
@@ -373,7 +370,7 @@ mod tests {
     }
 
     fn session() -> Session {
-        Session::new(items(), Config { reps: 3, move_threshold: 0.05 })
+        Session::new(items(), Config { reps: 3 })
     }
 
     fn now() -> DateTime<Local> {
@@ -411,12 +408,13 @@ mod tests {
     }
 
     #[test]
-    fn session_moving_threshold() {
+    fn session_records_spread_before_measure() {
+        // 押す直前の拾いの列と押した時点の値の、キーごとの最大 − 最小を残す
         let mut s = session();
-        let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.56), &[snap(0.5)]);
-        assert!(matches!(ev[0], Event::Recorded { moving: true, .. }));
-        let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.54), &[snap(0.5)]);
-        assert!(matches!(ev[0], Event::Recorded { moving: false, .. }));
+        let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.56), &[snap(0.5), snap(0.52)]);
+        assert!(matches!(ev[0], Event::Recorded { .. }));
+        let Record::Pose(list) = &s.records[0] else { panic!() };
+        assert!((list[0].spread["JawOpen"] - 0.06).abs() < 1e-6, "{:?}", list[0].spread);
     }
 
     #[test]
@@ -459,7 +457,7 @@ mod tests {
     #[test]
     fn session_interval_shows_reading_example() {
         let items = vec![Item { name: "読み".into(), kind: ItemKind::Interval(Some(Text::new("The North Wind", "あめんぼ赤いな"))), ids: vec!["read".into()] }];
-        let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
+        let mut s = Session::new(items, Config { reps: 3 });
         assert_eq!(s.progress().hint, "e.g. The North Wind");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.0), &[]);
         assert_eq!(s.progress().hint, "e.g. The North Wind");

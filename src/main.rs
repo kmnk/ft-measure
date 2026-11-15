@@ -54,12 +54,9 @@ pub struct Args {
     /// 1 秒に値を拾う回数
     #[arg(long, default_value_t = 20.0)]
     sample_hz: f64,
-    /// 「動いていた」を見る、測定の直前の秒数
+    /// 測定の直前の揺れ（spread）を見る秒数
     #[arg(long, default_value_t = 0.5)]
     move_window: f64,
-    /// 「動いていた」とみなす、最大と最小の差
-    #[arg(long, default_value_t = 0.05)]
-    move_threshold: f64,
     /// chatbox に送る最短の間隔（秒）
     #[arg(long, default_value_t = 1.5)]
     chatbox_interval: f64,
@@ -256,7 +253,7 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
         Chatbox::new(dest, Duration::from_secs_f64(args.chatbox_interval.max(0.0))).ok()
     };
 
-    let mut session = Session::new(prep.items, Config { reps: args.reps.max(1), move_threshold: args.move_threshold });
+    let mut session = Session::new(prep.items, Config { reps: args.reps.max(1) });
     let write = |session: &Session| {
         if let Err(e) = writer.write_all(session) {
             view::log(Level::Warn, &format!("{}: {e}", tr("Cannot write the files", "書き出せません")));

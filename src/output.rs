@@ -143,7 +143,7 @@ mod tests {
             Item { name: "向き".into(), kind: ItemKind::Sequence(vec!["上".into(), "下".into()]), ids: vec!["up".into(), "down".into()] },
             Item { name: "読み".into(), kind: ItemKind::Interval(None), ids: vec!["read".into()] },
         ];
-        let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
+        let mut s = Session::new(items, Config { reps: 3 });
         let t = Local::now();
         for v in [0.1, 0.5, 0.2] {
             s.handle_key(Key::Measure, 0.0, t, &snap(&[("JawOpen", v), ("Smile", 0.000002)]), &[]);
