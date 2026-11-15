@@ -209,7 +209,7 @@ mod tests {
         assert!(w.summary_path.file_name().unwrap().to_str().unwrap().starts_with("vi_ve_1_"));
         let items = vec![
             Item { name: "表A".into(), kind: ItemKind::Pose },
-            Item { name: "読み".into(), kind: ItemKind::Interval },
+            Item { name: "読み".into(), kind: ItemKind::Interval(None) },
         ];
         let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
         let t = Local::now();

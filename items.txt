@@ -3,11 +3,13 @@
 # Write each name as "English // 日本語". The English name goes into the output files;
 # the window and the chatbox show the language chosen in the window.
 # "interval:" lines are readings: Measure starts recording, Measure again stops it.
+#   After "|" you can write an example of what to read; it is shown before and while recording.
 # "sequence:" lines are split by "|": the first part is the item, the rest are the steps in order.
 # Other lines are poses measured 3 times, relaxing your face in between.
 #
 # 項目の一覧。名前は「English // 日本語」と書く。書き出すファイルには英語の名前が入る。
-# 「interval:」（区間:）は読み上げ、「sequence:」（順に:）は | で区切った順に作る表情。
+# 「interval:」（区間:）は読み上げで、| の後に読み上げる文の例を書ける（始める前と記録中に出る）。
+# 「sequence:」（順に:）は | で区切った順に作る表情。
 
 # Eyes and brows
 Close both eyes tightly // 両目をぎゅっと閉じる
@@ -33,10 +35,10 @@ sequence: Lips // 唇 | Press the lips together hard ("mmm") // 上下の唇を�
 sequence: Jaw (mouth slightly open) // 下顎（口を少し開けて） | Shift right // 右にずらす | Shift left // 左にずらす
 sequence: Tongue out, point the tip // 舌を出して先を | Up // 上に向ける | Down // 下に向ける | Right // 右に向ける | Left // 左に向ける
 
-# Reading aloud (a short passage of your choice, e.g. Kitahara Hakushu "Gojuon")
+# Reading aloud (a short passage of your choice, e.g. "The North Wind and the Sun" or Kitahara Hakushu "Gojuon")
 # 読み上げ（北原白秋「五十音」など）
-interval: Read aloud with a neutral face // 無表情で読み上げ
-interval: Read aloud with a light smile // 軽い笑顔で読み上げ
+interval: Read aloud with a neutral face // 無表情で読み上げ | The North Wind and the Sun were disputing which was the stronger // あめんぼ赤いな アイウエオ 浮藻に小蝦もおよいでる（北原白秋「五十音」）
+interval: Read aloud with a light smile // 軽い笑顔で読み上げ | The North Wind and the Sun were disputing which was the stronger // あめんぼ赤いな アイウエオ 浮藻に小蝦もおよいでる（北原白秋「五十音」）
 
 # Last
 Relaxed neutral face // 力を抜いた無表情

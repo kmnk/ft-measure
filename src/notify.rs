@@ -9,7 +9,6 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Sound {
     Measure,
-    Moving,
     Next,
     Undo,
     Warn,
@@ -22,7 +21,6 @@ impl Sound {
     pub fn name(self) -> &'static str {
         match self {
             Sound::Measure => crate::i18n::tr("measure", "測定"),
-            Sound::Moving => crate::i18n::tr("moving", "動いていた"),
             Sound::Next => crate::i18n::tr("next", "次へ"),
             Sound::Undo => crate::i18n::tr("undo", "取り消し"),
             Sound::Warn => crate::i18n::tr("warning", "警告"),
@@ -36,7 +34,6 @@ impl Sound {
     pub fn tones(self) -> &'static [(u32, u32)] {
         match self {
             Sound::Measure => &[(880, 120)],
-            Sound::Moving => &[(1320, 70), (1320, 70), (1320, 70)],
             Sound::Next => &[(660, 90), (990, 140)],
             Sound::Undo => &[(440, 220)],
             Sound::Warn => &[(220, 450)],

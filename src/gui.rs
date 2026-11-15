@@ -277,7 +277,6 @@ fn level_color(ui: &egui::Ui, l: Level) -> Color32 {
     match l {
         Level::Info => ui.visuals().text_color(),
         Level::Ok => GREEN,
-        Level::Note => ui.visuals().strong_text_color(),
         Level::Warn => AMBER,
     }
 }

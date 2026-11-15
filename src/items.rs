@@ -11,8 +11,8 @@ pub enum ItemKind {
     Pose,
     /// 向きを順に回って測る表情。向きの名前の列
     Sequence(Vec<Text>),
-    /// 測定で始めて測定で止める区間
-    Interval,
+    /// 測定で始めて測定で止める区間。読み上げる文の例があれば持つ
+    Interval(Option<Text>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,7 +56,16 @@ pub fn parse(src: &str) -> Result<Vec<Item>, String> {
             if rest.is_empty() {
                 return Err(format!("{} {lineno}: {}", tr("line", "行"), tr("the interval item has no name", "区間の項目の名前がありません")));
             }
-            Item { name: text(rest), kind: ItemKind::Interval }
+            // `名前 | 読み上げる文の例` の形。例は無くてもよい
+            let (name, read) = match rest.split_once(['|', '｜']) {
+                Some((n, r)) if !r.trim().is_empty() => (n, Some(text(r))),
+                Some((n, _)) => (n, None),
+                None => (rest, None),
+            };
+            if name.trim().is_empty() {
+                return Err(format!("{} {lineno}: {}", tr("line", "行"), tr("the interval item has no name", "区間の項目の名前がありません")));
+            }
+            Item { name: text(name), kind: ItemKind::Interval(read) }
         } else if let Some(rest) = strip_tag(line, &["sequence", "順に"]) {
             let parts: Vec<Text> = rest.split(['|', '｜']).filter(|s| !s.trim().is_empty()).map(text).collect();
             if parts.len() < 2 {
@@ -90,7 +99,7 @@ mod tests {
         assert_eq!(v[0], Item { name: "両目を閉じる".into(), kind: ItemKind::Pose });
         assert_eq!(v[1].kind, ItemKind::Sequence(vec!["上".into(), "下".into()]));
         assert_eq!(v[1].name, Text::same("目線"));
-        assert_eq!(v[2], Item { name: "読み上げ".into(), kind: ItemKind::Interval });
+        assert_eq!(v[2], Item { name: "読み上げ".into(), kind: ItemKind::Interval(None) });
         assert_eq!(v[3].kind, ItemKind::Sequence(vec!["上".into(), "下".into()]));
     }
 
@@ -101,7 +110,7 @@ mod tests {
         assert_eq!(v[0].name, Text::new("Close eyes", "目を閉じる"));
         assert_eq!(v[1].name, Text::new("Gaze", "目線"));
         assert_eq!(v[1].kind, ItemKind::Sequence(vec![Text::new("Up", "上"), Text::same("Down")]));
-        assert_eq!(v[2], Item { name: Text::new("Read", "読む"), kind: ItemKind::Interval });
+        assert_eq!(v[2], Item { name: Text::new("Read", "読む"), kind: ItemKind::Interval(None) });
     }
 
     #[test]
@@ -109,6 +118,14 @@ mod tests {
         assert!(parse("# only\n").is_err());
         assert!(parse("順に: 目線\n").unwrap_err().contains(" 1:"));
         assert!(parse("a\n区間:\n").unwrap_err().contains(" 2:"));
+    }
+
+    #[test]
+    fn items_interval_reads_example() {
+        let v = parse("interval: Read // 読む | The North Wind // あめんぼ赤いな\n区間: 読む2 |\n").unwrap();
+        assert_eq!(v[0], Item { name: Text::new("Read", "読む"), kind: ItemKind::Interval(Some(Text::new("The North Wind", "あめんぼ赤いな"))) });
+        assert_eq!(v[1], Item { name: "読む2".into(), kind: ItemKind::Interval(None) });
+        assert!(parse("interval: | 例\n").unwrap_err().contains(" 1:"));
     }
 
     #[test]
@@ -123,7 +140,7 @@ mod tests {
                 _ => None,
             })
             .collect();
-        let interval = v.iter().filter(|i| i.kind == ItemKind::Interval).count();
+        let interval = v.iter().filter(|i| matches!(i.kind, ItemKind::Interval(Some(_)))).count();
         // 表情 13 + 無表情 1、順に 5（向きは合わせて 14）、区間 2
         assert_eq!(pose, 14);
         assert_eq!(seq.len(), 5);

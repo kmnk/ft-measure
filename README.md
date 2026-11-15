@@ -16,13 +16,13 @@ The results are meant as material for per-device FT settings (VR headset tracker
 | Button | Key | What it does |
 | --- | --- | --- |
 | Measure | Space | Records the current values (for readings, starts and stops recording) |
-| Next | D (or → or Enter) | Moves to the next item |
+| Next | D (or → or Enter) | Moves to the next item once it is measured 3 times (each step 3 times for sequences, a recording for readings) |
 | Undo | A (or ← or Backspace) | Removes the last measurement of the current item |
 
 - The keys work while the FT Measure window is the active window. The window shows a warning when it is not.
 - Each pose is measured 3 times. Relax your face between measurements, then make the expression again.
 - For "sequence" items, move to the step shown in the chatbox, hold it, and press Measure. The steps go round 3 times.
-- For readings, press Measure to start, read the passage, and press Measure again to stop.
+- For readings, press Measure to start, read the passage, and press Measure again to stop. The window and the chatbox show an example of what to read.
 - A beep sounds for each action. Three short beeps mean your face moved a little just before you pressed Measure. The measurement is kept; press Undo only if you want to measure again.
 - The chatbox is visible to other players, so use a private instance.
 - The window can be shown in English or Japanese (top right). The choice is remembered.
@@ -38,7 +38,7 @@ The files are rewritten after every measurement, so closing the window keeps eve
 
 ## Item list
 
-Edit `items.txt` next to the exe to change the items. One item per line, written as `English name // 日本語の名前`. Lines starting with `interval:` are readings; lines like `sequence: name | step | step…` are sequences. The English names go into the output files.
+Edit `items.txt` next to the exe to change the items. One item per line, written as `English name // 日本語の名前`. Lines starting with `interval:` are readings, optionally followed by `| example text // 例の文` to show what to read; lines like `sequence: name | step | step…` are sequences. The English names go into the output files.
 
 ## Options
 
@@ -47,7 +47,7 @@ Run `ft-measure.exe --help` for the full list. The main ones:
 - `--port 9001`: the port to receive OSC on
 - `--prefix FT/In/`: the parameter prefix to record
 - `--reps 3`: how many times each pose is measured
-- `--move-threshold 0.05`, `--move-window 0.5`: the value change and the seconds that count as "moving"
+- `--move-threshold 0.05`, `--move-window 0.5`: the value change and the seconds that count as "moving" (only recorded in the output files; the tool does not announce it)
 - `--no-chatbox`: do not send to the chatbox
 - `--lang en|ja`: the display language
 

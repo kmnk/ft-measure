@@ -100,7 +100,7 @@ impl Session {
             .map(|i| match i.kind {
                 ItemKind::Pose => Record::Pose(Vec::new()),
                 ItemKind::Sequence(_) => Record::Sequence(Vec::new()),
-                ItemKind::Interval => Record::Interval { samples: Vec::new(), recording: false, start: None, duration: None },
+                ItemKind::Interval(_) => Record::Interval { samples: Vec::new(), recording: false, start: None, duration: None },
             })
             .collect();
         Session { items, records, idx: 0, cfg, finished: false }
@@ -225,6 +225,11 @@ impl Session {
         if self.is_recording() {
             ev.extend(self.measure(t, time, &Snapshot::new(), &[]));
         }
+        // 決まった回数を測り終えるまで、次の項目へ進めない（2026-11-15 に利用者が決めた）
+        if let Some(m) = self.missing() {
+            ev.push(Event::Warn(m));
+            return ev;
+        }
         if self.idx + 1 >= self.items.len() {
             self.finished = true;
             ev.push(Event::Finished);
@@ -233,6 +238,31 @@ impl Session {
             ev.push(Event::Advanced);
         }
         ev
+    }
+
+    /// 今の項目で、次へ進むのに足りない測定。足りていれば None。
+    fn missing(&self) -> Option<String> {
+        let reps = self.cfg.reps;
+        let left = match &self.records[self.idx] {
+            Record::Pose(list) => reps.saturating_sub(list.len()),
+            Record::Sequence(list) => {
+                let dirs = self.dirs().len();
+                (0..dirs).map(|d| reps.saturating_sub(list.iter().filter(|r| r.dir == d).count())).sum()
+            }
+            Record::Interval { samples, .. } => {
+                if samples.is_empty() {
+                    return Some(tr("Record the reading with Measure before going to the next item", "測定で区間を記録してから次へ進めます").into());
+                }
+                0
+            }
+        };
+        if left == 0 {
+            return None;
+        }
+        Some(match lang() {
+            Lang::En => format!("Measure {left} more {} before going to the next item", if left == 1 { "time" } else { "times" }),
+            Lang::Ja => format!("あと {left} 回測ってから次へ進めます"),
+        })
     }
 
     /// 窓に出す、今の項目と進み具合。
@@ -277,12 +307,17 @@ impl Session {
                 }
             }
             Record::Interval { samples, recording, .. } => {
+                // 読み上げる文の例は、始める前と記録中に出す
+                let read = match &item.kind {
+                    ItemKind::Interval(Some(r)) => format!("{}{}", tr("e.g. ", "例: "), r.show()),
+                    _ => String::new(),
+                };
                 if *recording {
-                    (name, tr("recording, Measure to stop", "記録中 測定で止める").to_string(), String::new())
+                    (name, tr("recording, Measure to stop", "記録中 測定で止める").to_string(), read)
                 } else if !samples.is_empty() {
                     (name, tr("recorded", "記録済み").to_string(), next_hint)
                 } else {
-                    (name, tr("Measure to start recording", "測定で始める").to_string(), String::new())
+                    (name, tr("Measure to start recording", "測定で始める").to_string(), read)
                 }
             }
         };
@@ -327,7 +362,7 @@ mod tests {
         vec![
             Item { name: "表A".into(), kind: ItemKind::Pose },
             Item { name: "向き".into(), kind: ItemKind::Sequence(vec!["上".into(), "下".into()]) },
-            Item { name: "読み".into(), kind: ItemKind::Interval },
+            Item { name: "読み".into(), kind: ItemKind::Interval(None) },
         ]
     }
 
@@ -385,9 +420,58 @@ mod tests {
     }
 
     #[test]
+    fn session_next_needs_all_measurements() {
+        let warned = |ev: &[Event], want: &str| matches!(ev, [Event::Warn(m)] if m == want);
+        let mut s = session();
+        // 3 回測る項目: 3 回に届くまで進めない。取り消して減ったらまた進めない
+        let ev = s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]);
+        assert!(warned(&ev, "Measure 3 more times before going to the next item"), "{ev:?}");
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.1), &[]);
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.2), &[]);
+        let ev = s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]);
+        assert!(warned(&ev, "Measure 1 more time before going to the next item"), "{ev:?}");
+        assert_eq!(s.idx, 0);
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.3), &[]);
+        s.handle_key(Key::Undo, 0.0, now(), &snap(0.0), &[]);
+        assert!(warned(&s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]), "Measure 1 more time before going to the next item"));
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.3), &[]);
+        assert_eq!(s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]), vec![Event::Advanced]);
+        // 順に作る表情: 全部の向きで 3 回ずつ。上だけ多く測っても、下が足りなければ進めない
+        for v in [0.9, 0.1, 0.8, 0.2, 0.7] {
+            s.handle_key(Key::Measure, 0.0, now(), &snap(v), &[]);
+        }
+        assert!(warned(&s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]), "Measure 1 more time before going to the next item"));
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.3), &[]);
+        assert_eq!(s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]), vec![Event::Advanced]);
+        // 区間: 記録が無ければ進めない。記録中なら止めて、拾いがあれば進む（最後の項目なので終わる）
+        assert!(warned(&s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]), "Record the reading with Measure before going to the next item"));
+        s.handle_key(Key::Measure, 1.0, now(), &snap(0.0), &[]);
+        let ev = s.handle_key(Key::Next, 1.2, now(), &snap(0.0), &[]);
+        assert!(matches!(ev.last(), Some(Event::Warn(_))), "拾いが 0 の区間で進んだ: {ev:?}");
+        assert!(!s.finished);
+        s.handle_key(Key::Measure, 2.0, now(), &snap(0.0), &[]);
+        s.on_sample(2.1, now(), &snap(0.2));
+        let ev = s.handle_key(Key::Next, 2.5, now(), &snap(0.0), &[]);
+        assert!(matches!(ev[0], Event::IntervalStopped { samples: 1, .. }), "{ev:?}");
+        assert_eq!(ev.last(), Some(&Event::Finished));
+    }
+
+    #[test]
+    fn session_interval_shows_reading_example() {
+        let items = vec![Item { name: "読み".into(), kind: ItemKind::Interval(Some(Text::new("The North Wind", "あめんぼ赤いな"))) }];
+        let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
+        assert_eq!(s.progress().hint, "e.g. The North Wind");
+        s.handle_key(Key::Measure, 0.0, now(), &snap(0.0), &[]);
+        assert_eq!(s.progress().hint, "e.g. The North Wind");
+        s.on_sample(0.1, now(), &snap(0.2));
+        s.handle_key(Key::Measure, 0.5, now(), &snap(0.0), &[]);
+        assert_eq!(s.progress().hint, "Press D for the next item");
+    }
+
+    #[test]
     fn session_sequence_rotates_and_undo_returns_direction() {
         let mut s = session();
-        s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]);
+        s.idx = 1;
         assert_eq!(s.status(), "向き: 上 1/3 (2/3)");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.9), &[]);
         assert_eq!(s.status(), "向き: 下 1/3 (2/3)");

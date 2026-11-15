@@ -15,8 +15,6 @@ const LOG_LINES: usize = 200;
 pub enum Level {
     Info,
     Ok,
-    /// 記録はしたが、知っておくとよいこと
-    Note,
     Warn,
 }
 

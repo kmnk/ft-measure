@@ -90,7 +90,7 @@ fn e2e_full_run_last_name_and_kill() {
     // 値が届く前の測定は警告になる
     s += "measure\n";
     s += &format!("send {P} 0.1\nsend /avatar/parameters/GestureLeft 3\nsend /avatar/parameters/FT/InX 0.7\nwait 800\nmeasure\n");
-    // 押す直前に値が変わった回は「動いていた」になる
+    // 押す直前に値が変わった回は「動いていた」として記録に残るが、知らせは出さない
     s += &format!("send {P} 0.5\nwait 150\nmeasure\n");
     s += &format!("send {P} 0.2\nwait 800\nmeasure\n");
     // 4 回目を測って取り消す
@@ -160,9 +160,10 @@ fn e2e_full_run_last_name_and_kill() {
     }
 
     // 音
-    for s in ["測定", "動いていた", "次へ", "取り消し", "警告", "区間の開始", "区間の終わり", "終わり"] {
+    for s in ["測定", "次へ", "取り消し", "警告", "区間の開始", "区間の終わり", "終わり"] {
         assert!(stdout.contains(&format!("[音] {s}")), "音 {s} が無い: {stdout}");
     }
+    assert!(!stdout.contains("動いていた"), "動いていたの知らせが出ている: {stdout}");
 
     // chatbox
     std::thread::sleep(Duration::from_millis(200));
@@ -171,7 +172,7 @@ fn e2e_full_run_last_name_and_kill() {
     assert!(has("表A 1/3（1/3）"), "{msgs:?}");
     assert!(has("表A 2/3（1/3） 顔をリラックスさせてから、もう一度"), "{msgs:?}");
     assert!(has("値がまだ 1 つも届いていません"), "{msgs:?}");
-    assert!(has("少し動いていた"), "{msgs:?}");
+    assert!(!has("動いていた"), "{msgs:?}");
     assert!(msgs.iter().filter(|x| x.contains("向き: 上 2/3（2/3）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
     assert!(has("読み 記録中"), "{msgs:?}");
     assert!(has("測定が終わりました"), "{msgs:?}");
@@ -258,10 +259,13 @@ fn e2e_port_in_use_is_reported() {
 fn e2e_files_use_english_names_and_display_follows_language() {
     // 名前を「English // 日本語」で書いた一覧で、日本語の表示を選んで測る
     let tmp = tempfile::tempdir().unwrap();
-    let items = "Close eyes // 目を閉じる\nsequence: Gaze // 目線 | Up // 上 | Down // 下\n";
+    let items = "Close eyes // 目を閉じる\ninterval: Read // 読む | Hello there // こんにちは\nsequence: Gaze // 目線 | Up // 上 | Down // 下\n";
     let chat = chatbox_listener(19111);
     let p = "/avatar/parameters/FT/In/EyeClosed";
-    let script = format!("send {p} 0.5\nwait 300\nmeasure\nnext\nmeasure\nwait 300\nquit\n");
+    // 1 回だけ測って次へを押すと止められ、3 回測ると進める。区間も記録してから進む
+    let script = format!(
+        "send {p} 0.5\nwait 300\nmeasure\nnext\nwait 100\nmeasure\nmeasure\nnext\nwait 300\nmeasure\nwait 300\nmeasure\nnext\nmeasure\nwait 300\nquit\n"
+    );
     let d = tmp.path().join("r");
     std::fs::create_dir_all(&d).unwrap();
     run_lang(&d, items, &script, "lang-dev\n\n", 19110, 19111, "ja");
@@ -274,8 +278,11 @@ fn e2e_files_use_english_names_and_display_follows_language() {
     }
     std::thread::sleep(Duration::from_millis(200));
     let msgs = chat.lock().unwrap().clone();
-    assert!(msgs.iter().any(|x| x.contains("目を閉じる 1/3（1/2）")), "{msgs:?}");
-    assert!(msgs.iter().any(|x| x.contains("目線: 下 1/3（2/2）")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("目を閉じる 1/3（1/3）")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("あと 2 回測ってから次へ進めます")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("読む 測定で始める（2/3） 例: こんにちは")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("目線: 下 1/3（3/3）")), "{msgs:?}");
+    assert_eq!(csv.matches(",Close eyes,pose,EyeClosed,3,").count(), 1, "{csv}");
 
     // 英語の表示では、chatbox も英語の名前になる
     let chat2 = chatbox_listener(19113);
@@ -284,6 +291,8 @@ fn e2e_files_use_english_names_and_display_follows_language() {
     run_lang(&d2, items, &script, "lang-dev\n\n", 19112, 19113, "en");
     std::thread::sleep(Duration::from_millis(200));
     let msgs = chat2.lock().unwrap().clone();
-    assert!(msgs.iter().any(|x| x.contains("Close eyes 1/3 (1/2)")), "{msgs:?}");
-    assert!(msgs.iter().any(|x| x.contains("Gaze: Down 1/3 (2/2)")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("Close eyes 1/3 (1/3)")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("Measure 2 more times before going to the next item")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("Read Measure to start recording (2/3) e.g. Hello there")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("Gaze: Down 1/3 (3/3)")), "{msgs:?}");
 }
