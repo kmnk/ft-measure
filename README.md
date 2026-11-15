@@ -16,14 +16,14 @@ The results are meant as material for per-device FT settings (VR headset tracker
 | Button | Key | What it does |
 | --- | --- | --- |
 | Measure | Space | Records the current values (for readings, starts and stops recording) |
-| Next | Enter | Moves to the next item |
-| Undo | Backspace | Removes the last measurement of the current item |
+| Next | D (or → or Enter) | Moves to the next item |
+| Undo | A (or ← or Backspace) | Removes the last measurement of the current item |
 
 - The keys work while the FT Measure window is the active window. The window shows a warning when it is not.
 - Each pose is measured 3 times. Relax your face between measurements, then make the expression again.
 - For "sequence" items, move to the step shown in the chatbox, hold it, and press Measure. The steps go round 3 times.
 - For readings, press Measure to start, read the passage, and press Measure again to stop.
-- A beep sounds for each action. Three short beeps mean the face was moving just before you pressed Measure; you can undo and measure again.
+- A beep sounds for each action. Three short beeps mean your face moved a little just before you pressed Measure. The measurement is kept; press Undo only if you want to measure again.
 - The chatbox is visible to other players, so use a private instance.
 - The window can be shown in English or Japanese (top right). The choice is remembered.
 
@@ -58,7 +58,7 @@ VRChat のフェイストラッキング（FT）の値を、表情ごとに測�
 1. VRChat で OSC をオンにします（アクションメニューの Options > OSC > Enabled）。
 2. Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>` のパラメータに出すアバターに着替えます。
 3. `ft-measure.exe` をダブルクリックし、右上で「日本語」を選びます。顔を動かして下の丸が緑になるのを確かめ、機器の名前とメモを入れて「始める」を押します。
-4. 窓と chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は Enter、「取り消し」は Backspace です。キーは、この窓が選ばれているときに効きます。
+4. 窓と chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は D キー（→ や Enter でも可）、「取り消し」は A キー（← や Backspace でも可）です。キーは、この窓が選ばれているときに効きます。
 
 書き出すファイルは英語です。`items.txt` の名前は `English // 日本語` の形で書き、窓と chatbox には選んだ言語の名前が出ます。
 

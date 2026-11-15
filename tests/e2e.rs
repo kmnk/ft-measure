@@ -171,7 +171,7 @@ fn e2e_full_run_last_name_and_kill() {
     assert!(has("表A 1/3（1/3）"), "{msgs:?}");
     assert!(has("表A 2/3（1/3） 顔をリラックスさせてから、もう一度"), "{msgs:?}");
     assert!(has("値がまだ 1 つも届いていません"), "{msgs:?}");
-    assert!(has("動いていた"), "{msgs:?}");
+    assert!(has("少し動いていた"), "{msgs:?}");
     assert!(msgs.iter().filter(|x| x.contains("向き: 上 2/3（2/3）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
     assert!(has("読み 記録中"), "{msgs:?}");
     assert!(has("測定が終わりました"), "{msgs:?}");

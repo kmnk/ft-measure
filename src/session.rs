@@ -251,7 +251,7 @@ impl Session {
         let item = &self.items[self.idx];
         let name = item.name.show().to_string();
         let reps = self.cfg.reps;
-        let next_hint = tr("Press Enter for the next item", "Enter で次へ").to_string();
+        let next_hint = tr("Press D for the next item", "D キーで次へ").to_string();
         let (title, step, hint) = match &self.records[self.idx] {
             Record::Pose(list) => {
                 let next = list.len() + 1;
@@ -352,7 +352,7 @@ mod tests {
         for v in [0.1, 0.5, 0.2] {
             s.handle_key(Key::Measure, 0.0, now(), &snap(v), &[snap(v)]);
         }
-        assert_eq!(s.status(), "表A 3/3 done (1/3) Press Enter for the next item");
+        assert_eq!(s.status(), "表A 3/3 done (1/3) Press D for the next item");
         let ev = s.handle_key(Key::Undo, 0.0, now(), &snap(0.0), &[]);
         assert_eq!(ev[0], Event::Undone { label: "表A".into() });
         assert_eq!(s.status(), "表A 3/3 (1/3) Relax your face, then make it again");
@@ -399,7 +399,7 @@ mod tests {
         for v in [0.8, 0.2, 0.7, 0.3] {
             s.handle_key(Key::Measure, 0.0, now(), &snap(v), &[]);
         }
-        assert_eq!(s.status(), "向き 3 rounds done (2/3) Press Enter for the next item");
+        assert_eq!(s.status(), "向き 3 rounds done (2/3) Press D for the next item");
         let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.6), &[]);
         assert!(matches!(&ev[0], Event::Recorded { label, rep: 4, .. } if label == "向き: 上"));
         match &s.records[1] {

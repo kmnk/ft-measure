@@ -336,11 +336,20 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
                 match ev {
                     Event::Recorded { label, rep, of, moving, keys } => {
                         sounds.play(Sound::Measure);
-                        view::log(Level::Ok, &format!("{}: {label} {rep}/{of} ({keys} {})", tr("Recorded", "記録"), tr("keys", "キー")));
+                        let rec = match i18n::lang() {
+                            Lang::En => format!("Recorded: {label} {rep}/{of} ({keys} keys)"),
+                            Lang::Ja => format!("記録しました: {label} {rep}/{of}（{keys} キー）"),
+                        };
                         if *moving {
+                            // 記録は残している。取り消すかは利用者が決めるので、警告の色にせず、知らせとして出す
                             sounds.play(Sound::Moving);
-                            view::log(Level::Warn, tr("The face was moving. Press Undo to measure again", "動いていました。取り消して測り直せます"));
-                            note = format!("{} / ", tr("Moving, you can undo", "動いていた 取り消せます"));
+                            view::log(Level::Note, &format!("{rec}{}{}", tr(". ", "。"), tr(
+                                "Your face moved a little just before. If you want, press Undo to measure again",
+                                "押す直前に顔が少し動いていました。気になるときは「取り消し」で測り直せます",
+                            )));
+                            note = format!("{} / ", tr("Recorded (moved a little, undo if you want)", "記録した（少し動いていた。気になれば取り消し）"));
+                        } else {
+                            view::log(Level::Ok, &rec);
                         }
                     }
                     Event::Warn(m) => {

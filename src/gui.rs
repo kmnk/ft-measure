@@ -16,8 +16,10 @@ pub fn key_of(ev: &egui::Event) -> Option<Key> {
     match ev {
         egui::Event::Key { key, pressed: true, repeat: false, modifiers, .. } if modifiers.is_none() => match key {
             egui::Key::Space => Some(Key::Measure),
-            egui::Key::Enter => Some(Key::Next),
-            egui::Key::Backspace => Some(Key::Undo),
+            // HMD を着けたまま、スペースに親指を置いた左手で押せるよう、D と A を主にする。
+            // 矢印キーと Enter・Backspace も同じ働きにしておく
+            egui::Key::D | egui::Key::ArrowRight | egui::Key::Enter => Some(Key::Next),
+            egui::Key::A | egui::Key::ArrowLeft | egui::Key::Backspace => Some(Key::Undo),
             _ => None,
         },
         _ => None,
@@ -25,6 +27,7 @@ pub fn key_of(ev: &egui::Event) -> Option<Key> {
 }
 
 const GREEN: Color32 = Color32::from_rgb(0x3f, 0xb9, 0x50);
+/// 警告の色。正常な流れ（待っている、次にすること、止めた）には使わず、記録できなかったときや始められないときだけに使う
 const AMBER: Color32 = Color32::from_rgb(0xe0, 0xa0, 0x30);
 
 enum Screen {
@@ -212,6 +215,7 @@ fn level_color(ui: &egui::Ui, l: Level) -> Color32 {
     match l {
         Level::Info => ui.visuals().text_color(),
         Level::Ok => GREEN,
+        Level::Note => ui.visuals().strong_text_color(),
         Level::Warn => AMBER,
     }
 }
@@ -280,7 +284,7 @@ impl App {
             let (color, text) = if self.table.is_none() {
                 (ui.visuals().weak_text_color(), tr("Not receiving", "受けていません").to_string())
             } else if n == 0 {
-                (AMBER, format!("{} (OSC {}:{})", tr("Waiting for FT values from VRChat", "VRChat からの FT の値を待っています"), self.args.host, self.args.port))
+                (ui.visuals().weak_text_color(), format!("{} (OSC {}:{})", tr("Waiting for FT values from VRChat", "VRChat からの FT の値を待っています"), self.args.host, self.args.port))
             } else {
                 (GREEN, match i18n::lang() {
                     Lang::En => format!("Receiving {n} FT parameters"),
@@ -417,7 +421,7 @@ impl App {
                     ui.label(RichText::new(&p.step).size(22.0).color(ui.visuals().selection.stroke.color));
                 }
                 if !p.hint.is_empty() {
-                    ui.label(RichText::new(&p.hint).size(18.0).color(AMBER));
+                    ui.label(RichText::new(&p.hint).size(18.0).color(ui.visuals().strong_text_color()));
                 }
             });
         });
@@ -449,10 +453,10 @@ impl App {
             if big_button(ui, size, tr("Measure", "測る"), Some(tr("Space", "スペース")), true, f0) {
                 clicked = Some(Key::Measure);
             }
-            if big_button(ui, size, tr("Next", "次へ"), Some("Enter"), false, f1) {
+            if big_button(ui, size, tr("Next", "次へ"), Some(tr("D key", "D キー")), false, f1) {
                 clicked = Some(Key::Next);
             }
-            if big_button(ui, size, tr("Undo", "取り消し"), Some("Backspace"), false, f2) {
+            if big_button(ui, size, tr("Undo", "取り消し"), Some(tr("A key", "A キー")), false, f2) {
                 clicked = Some(Key::Undo);
             }
         });
@@ -478,7 +482,7 @@ impl App {
         if finished {
             ui.heading(RichText::new(tr("All items measured", "全部の項目を測りました")).size(26.0).color(GREEN));
         } else {
-            ui.heading(RichText::new(tr("Stopped. The items measured so far are saved", "止めました。それまでに測った分は保存してあります")).size(22.0).color(AMBER));
+            ui.heading(RichText::new(tr("Stopped. The items measured so far are saved", "止めました。それまでに測った分は保存してあります")).size(22.0).color(ui.visuals().strong_text_color()));
         }
         ui.add_space(8.0);
         card(ui, |ui| {
@@ -565,9 +569,13 @@ mod tests {
         assert_eq!(key_of(&ev(egui::Key::Space, true, false, n)), Some(Key::Measure));
         assert_eq!(key_of(&ev(egui::Key::Enter, true, false, n)), Some(Key::Next));
         assert_eq!(key_of(&ev(egui::Key::Backspace, true, false, n)), Some(Key::Undo));
+        assert_eq!(key_of(&ev(egui::Key::ArrowRight, true, false, n)), Some(Key::Next));
+        assert_eq!(key_of(&ev(egui::Key::ArrowLeft, true, false, n)), Some(Key::Undo));
         assert_eq!(key_of(&ev(egui::Key::Space, true, true, n)), None, "押しっぱなしの繰り返し");
         assert_eq!(key_of(&ev(egui::Key::Space, false, false, n)), None, "離した出来事");
         assert_eq!(key_of(&ev(egui::Key::Space, true, false, egui::Modifiers::CTRL)), None);
-        assert_eq!(key_of(&ev(egui::Key::A, true, false, n)), None);
+        assert_eq!(key_of(&ev(egui::Key::D, true, false, n)), Some(Key::Next));
+        assert_eq!(key_of(&ev(egui::Key::A, true, false, n)), Some(Key::Undo));
+        assert_eq!(key_of(&ev(egui::Key::S, true, false, n)), None);
     }
 }
