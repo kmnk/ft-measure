@@ -532,7 +532,7 @@ impl App {
                 }
             });
         });
-        if let Some(s) = &v.summary_path {
+        if let Some(s) = &v.path {
             ui.add(egui::Label::new(RichText::new(format!("{}: {}", tr("Saving to", "保存先"), s.display())).weak().small()).truncate());
         }
     }
@@ -547,15 +547,13 @@ impl App {
         ui.add_space(8.0);
         card(ui, |ui| {
             ui.label(RichText::new(tr("Saved files", "保存したファイル")).strong());
-            if let Some(dir) = v.summary_path.as_ref().and_then(|p| p.parent()) {
+            if let Some(dir) = v.path.as_ref().and_then(|p| p.parent()) {
                 ui.add(egui::Label::new(RichText::new(dir.display().to_string()).weak()).truncate());
             }
-            for p in [&v.summary_path, &v.raw_path].into_iter().flatten() {
-                if let Some(n) = p.file_name() {
-                    ui.label(RichText::new(format!("• {}", n.to_string_lossy())).monospace());
-                }
+            if let Some(n) = v.path.as_ref().and_then(|p| p.file_name()) {
+                ui.label(RichText::new(format!("• {}", n.to_string_lossy())).monospace());
             }
-            if v.summary_path.is_none() {
+            if v.path.is_none() {
                 for (l, m) in v.log.iter().filter(|(l, _)| *l == Level::Warn) {
                     ui.label(RichText::new(m).color(level_color(ui, *l)));
                 }
@@ -563,7 +561,7 @@ impl App {
         });
         ui.add_space(12.0);
         ui.horizontal(|ui| {
-            let dir = v.summary_path.as_ref().and_then(|p| p.parent().map(Path::to_path_buf)).or_else(|| self.out_dir.clone());
+            let dir = v.path.as_ref().and_then(|p| p.parent().map(Path::to_path_buf)).or_else(|| self.out_dir.clone());
             if let Some(d) = dir {
                 if big_button(ui, egui::vec2(190.0, 48.0), tr("Open folder", "フォルダを開く"), None, true, false) {
                     open_folder(&d);

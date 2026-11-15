@@ -23,8 +23,7 @@ pub struct View {
     pub log: VecDeque<(Level, String)>,
     /// 今の項目と回
     pub progress: Progress,
-    pub summary_path: Option<PathBuf>,
-    pub raw_path: Option<PathBuf>,
+    pub path: Option<PathBuf>,
     /// 測るスレッドが終わった。Some(true) は一覧の最後まで進んだ
     pub ended: Option<bool>,
 }
@@ -73,10 +72,9 @@ pub fn set_progress(p: Progress) {
     update(|v| v.progress = p);
 }
 
-pub fn set_paths(summary: &Path, raw: &Path) {
+pub fn set_path(path: &Path) {
     update(|v| {
-        v.summary_path = Some(summary.to_path_buf());
-        v.raw_path = Some(raw.to_path_buf());
+        v.path = Some(path.to_path_buf());
     });
 }
 

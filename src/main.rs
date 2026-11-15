@@ -240,7 +240,7 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
     };
     let writer = Writer::new(&prep.out_dir, info)
         .map_err(|e| format!("{} {}: {e}", tr("Cannot create the output folder", "書き出し先を作れません:"), prep.out_dir.display()))?;
-    view::set_paths(&writer.summary_path, &writer.raw_path);
+    view::set_path(&writer.path);
 
     let table = prep.table;
     let orx = prep.osc_events;
@@ -263,7 +263,7 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
         }
     };
     write(&session);
-    say(&format!("{}: {}", tr("Output", "書き出し先"), writer.summary_path.display()));
+    say(&format!("{}: {}", tr("Output", "書き出し先"), writer.path.display()));
 
     let show = |session: &Session| {
         view::set_progress(session.progress());
@@ -407,8 +407,7 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
         c.tick(Instant::now());
     }
     drop(source);
-    view::log(Level::Ok, &format!("{}: {}", tr("Saved", "書き出しました"), writer.summary_path.display()));
-    say(&format!("            : {}", writer.raw_path.display()));
+    view::log(Level::Ok, &format!("{}: {}", tr("Saved", "書き出しました"), writer.path.display()));
     if session.finished {
         // 終わりの音を鳴らし切る
         std::thread::sleep(Duration::from_millis(600));
