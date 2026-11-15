@@ -73,6 +73,7 @@ fn value_of(k: usize, rep: usize) -> f64 {
 
 /// 一覧を最後まで進める台本と、id ごとに測るはずの値。
 /// 最初の項目では、値が届く前に測り、3 回そろう前に次へを押し、4 回目を測って取り消す。
+/// 最初の順に作る表情（ウィンク）では、2 周目の右目の前に 0.0 を測って取り消す。
 fn full_script() -> (String, BTreeMap<String, Vec<f64>>) {
     let mut s = String::from("measure\n");
     s += "send /avatar/parameters/GestureLeft 3\nsend /avatar/parameters/FT/InX 0.7\n";
@@ -98,6 +99,9 @@ fn full_script() -> (String, BTreeMap<String, Vec<f64>>) {
             Kind::Sequence => {
                 // 向きは 3 周する
                 for rep in 0..3 {
+                    if n == 13 && rep == 1 {
+                        s += &format!("send {P} 0.0\nwait {WAIT}\nmeasure\nundo\n");
+                    }
                     for (d, (_, id)) in rows.iter().enumerate() {
                         let v = value_of(k + d, rep);
                         s += &format!("send {P} {v}\nwait {WAIT}\nmeasure\n");
@@ -232,6 +236,10 @@ fn e2e_full_run_last_name_and_kill() {
     assert_eq!(seen.len(), 28, "{:?}", seen.keys());
     // 文字列ではなく値で見る（時刻の文字列が 0.999 を含むことがある）
     assert!(!rows.iter().any(|r| r["values"]["JawOpen"].as_f64() == Some(0.999)), "取り消した回が残っている");
+    assert!(!rows.iter().any(|r| r["values"]["JawOpen"].as_f64() == Some(0.0)), "順に作る表情で取り消した回が残っている");
+    // 順に作る表情の行は、英語の向きの名前を direction に持つ
+    assert!(rows.iter().filter(|r| r["id"] == "gaze_up").all(|r| r["direction"] == "Up" && r["item"] == "Gaze (face forward): Up"));
+    assert_eq!(rows.iter().filter(|r| r["id"] == "gaze_up").count(), 3);
 
     // 区間の拾いは、その区間で送った値を持つ
     for id in ["read_neutral", "read_smile"] {
@@ -262,6 +270,8 @@ fn e2e_full_run_last_name_and_kill() {
     assert!(has("値がまだ 1 つも届いていません"), "{msgs:?}");
     assert!(has("あと 2 回測ってから次へ進めます"), "{msgs:?}");
     assert!(has("ウィンク: 右目だけ閉じる 1/3（14/21）"), "{msgs:?}");
+    // 取り消しの後は、消した回の向きがもう一度知らされる
+    assert!(msgs.iter().filter(|x| x.contains("ウィンク: 右目だけ閉じる 2/3（14/21）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
     assert!(has("無表情で読み上げ 測定で始める（19/21） 例: あめんぼ赤いな"), "{msgs:?}");
     assert!(has("無表情で読み上げ 記録中"), "{msgs:?}");
     assert!(has("測定が終わりました"), "{msgs:?}");
@@ -392,12 +402,16 @@ fn e2e_english_display_uses_english_names() {
     let chat = chatbox_listener(19113);
     let d = tmp.path().join("r");
     std::fs::create_dir_all(&d).unwrap();
-    run_lang(&d, &format!("send {P} 0.5\nwait {WAIT}\nmeasure\nnext\nquit\n"), "lang-dev\n\n", 19112, 19113, "en");
+    run_lang(&d, &full_script().0, "lang-dev\n\n", 19112, 19113, "en");
     std::thread::sleep(Duration::from_millis(200));
     let msgs = chat.lock().unwrap().clone();
-    assert!(msgs.iter().any(|x| x.contains("Close both eyes tightly 1/3 (1/21)")), "{msgs:?}");
-    assert!(msgs.iter().any(|x| x.contains("Measure 2 more times before going to the next item")), "{msgs:?}");
+    let has = |t: &str| msgs.iter().any(|x| x.contains(t));
+    assert!(has("Close both eyes tightly 1/3 (1/21)"), "{msgs:?}");
+    assert!(has("Measure 2 more times before going to the next item"), "{msgs:?}");
+    assert!(has("Wink: Close the left eye only 1/3 (14/21)"), "{msgs:?}");
+    assert!(has("Read aloud with a neutral face Measure to start recording (19/21) e.g. The North Wind"), "{msgs:?}");
     let rows = read_rows(&find(&d.join("out"), ".jsonl").unwrap());
     assert_eq!(rows[1]["item"], "Close both eyes tightly");
     assert_eq!(rows[1]["id"], "eyes_close");
+    assert!(rows.iter().filter(|r| r["id"] == "gaze_up").all(|r| r["direction"] == "Up" && r["item"] == "Gaze (face forward): Up"));
 }
