@@ -1,0 +1,48 @@
+# ft-measure item list (built into the exe; users cannot change it)
+# One item per line. Blank lines and lines starting with # are ignored.
+# Write each name as "English // 日本語 [id]". The English name and the id go into the output file;
+# the window and the chatbox show the language chosen in the window.
+# Every item has an id (for a sequence, every step has one): lowercase letters, digits and "_".
+# The FT generator finds the items by their ids. Changing or removing an id needs a new FORMAT_VERSION in output.rs.
+# "interval:" lines are readings: Measure starts recording, Measure again stops it.
+#   After "|" you can write an example of what to read; it is shown before and while recording.
+# "sequence:" lines are split by "|": the first part is the item, the rest are the steps in order.
+# Other lines are poses measured 3 times, relaxing your face in between.
+#
+# 項目の一覧（exe に埋め込む。利用者は変えられない）。名前は「English // 日本語 [id]」と書く。
+# 書き出すファイルには英語の名前と id が入る。全部の項目（順に作る表情は各向き）に id を付ける。
+# 生成器は id で項目を探すので、id を変える・消すときは output.rs の FORMAT_VERSION を上げる。
+# 「interval:」（区間:）は読み上げで、| の後に読み上げる文の例を書ける（始める前と記録中に出る）。
+# 「sequence:」（順に:）は | で区切った順に作る表情。
+
+# Eyes and brows
+Close both eyes tightly // 両目をぎゅっと閉じる [eyes_close]
+Open both eyes as wide as you can // 目を思い切り見開く [eyes_wide]
+Squint by raising the lower eyelids (as in bright light) // 下まぶたを上げて目を細める（まぶしいとき） [eyes_squint]
+Raise both brows as high as you can (surprise) // 眉を思い切り上げる（驚き） [brows_up]
+Pull the brows together and down (frown) // 眉を寄せて下げる（しかめ面） [brows_down]
+
+# Mouth
+Open the mouth vertically as far as you can // 口を縦に最大まで開く [jaw_open]
+With the mouth open, stretch the lips sideways // 口を開いたまま唇を横に引き伸ばす [mouth_stretch]
+With the mouth closed, pull the corners out and up // 口を閉じたまま口角を横上に引き上げる [mouth_smile]
+With the mouth closed, pull the corners down // 口を閉じたまま口角を下に引き下げる [mouth_frown]
+Pucker the lips and push them forward // 唇をすぼめて前に突き出す [lips_pucker]
+Bite the teeth together and open the lips ("eee") // 歯を噛み合わせて唇を上下に開く（「いー」） [lips_apart]
+Close the mouth and puff out the cheeks // 口を閉じて頬を膨らませる [cheeks_puff]
+Stick the tongue out as far as you can // 舌を前に最大まで出す [tongue_out]
+
+# Expressions with directions or sides
+sequence: Wink // ウィンク | Close the right eye only // 右目だけ閉じる [wink_right] | Close the left eye only // 左目だけ閉じる [wink_left]
+sequence: Gaze (face forward) // 目線（顔は正面） | Up // 上 [gaze_up] | Down // 下 [gaze_down] | Right // 右 [gaze_right] | Left // 左 [gaze_left]
+sequence: Lips // 唇 | Press the lips together hard ("mmm") // 上下の唇をぎゅっと押し合わせる（「んー」とこらえる口） [lips_press] | Roll the lips into the mouth to hide them // 上下の唇を口の中へ巻き込んで隠す [lips_roll]
+sequence: Jaw (mouth slightly open) // 下顎（口を少し開けて） | Shift right // 右にずらす [jaw_right] | Shift left // 左にずらす [jaw_left]
+sequence: Tongue out, point the tip // 舌を出して先を | Up // 上に向ける [tongue_up] | Down // 下に向ける [tongue_down] | Right // 右に向ける [tongue_right] | Left // 左に向ける [tongue_left]
+
+# Reading aloud (a short passage of your choice, e.g. "The North Wind and the Sun" or Kitahara Hakushu "Gojuon")
+# 読み上げ（北原白秋「五十音」など）
+interval: Read aloud with a neutral face // 無表情で読み上げ [read_neutral] | The North Wind and the Sun were disputing which was the stronger // あめんぼ赤いな アイウエオ 浮藻に小蝦もおよいでる（北原白秋「五十音」）
+interval: Read aloud with a light smile // 軽い笑顔で読み上げ [read_smile] | The North Wind and the Sun were disputing which was the stronger // あめんぼ赤いな アイウエオ 浮藻に小蝦もおよいでる（北原白秋「五十音」）
+
+# Last
+Relaxed neutral face // 力を抜いた無表情 [neutral]

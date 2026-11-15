@@ -360,9 +360,9 @@ mod tests {
 
     fn items() -> Vec<Item> {
         vec![
-            Item { name: "表A".into(), kind: ItemKind::Pose },
-            Item { name: "向き".into(), kind: ItemKind::Sequence(vec!["上".into(), "下".into()]) },
-            Item { name: "読み".into(), kind: ItemKind::Interval(None) },
+            Item { name: "表A".into(), kind: ItemKind::Pose, ids: vec!["a".into()] },
+            Item { name: "向き".into(), kind: ItemKind::Sequence(vec!["上".into(), "下".into()]), ids: vec!["up".into(), "down".into()] },
+            Item { name: "読み".into(), kind: ItemKind::Interval(None), ids: vec!["read".into()] },
         ]
     }
 
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn session_interval_shows_reading_example() {
-        let items = vec![Item { name: "読み".into(), kind: ItemKind::Interval(Some(Text::new("The North Wind", "あめんぼ赤いな"))) }];
+        let items = vec![Item { name: "読み".into(), kind: ItemKind::Interval(Some(Text::new("The North Wind", "あめんぼ赤いな"))), ids: vec!["read".into()] }];
         let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
         assert_eq!(s.progress().hint, "e.g. The North Wind");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.0), &[]);

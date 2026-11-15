@@ -208,8 +208,8 @@ mod tests {
         let w = Writer::new(dir.path(), info).unwrap();
         assert!(w.summary_path.file_name().unwrap().to_str().unwrap().starts_with("vi_ve_1_"));
         let items = vec![
-            Item { name: "表A".into(), kind: ItemKind::Pose },
-            Item { name: "読み".into(), kind: ItemKind::Interval(None) },
+            Item { name: "表A".into(), kind: ItemKind::Pose, ids: vec!["a".into()] },
+            Item { name: "読み".into(), kind: ItemKind::Interval(None), ids: vec!["read".into()] },
         ];
         let mut s = Session::new(items, Config { reps: 3, move_threshold: 0.05 });
         let t = Local::now();
