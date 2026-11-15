@@ -337,7 +337,7 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
                     Event::Recorded { label, rep, of, moving, keys } => {
                         sounds.play(Sound::Measure);
                         let rec = match i18n::lang() {
-                            Lang::En => format!("Recorded: {label} {rep}/{of} ({keys} keys)"),
+                            Lang::En => format!("Recorded: {label} {rep}/{of} ({keys} {})", if *keys == 1 { "key" } else { "keys" }),
                             Lang::Ja => format!("記録しました: {label} {rep}/{of}（{keys} キー）"),
                         };
                         if *moving {

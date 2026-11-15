@@ -129,6 +129,44 @@ fn open_folder(dir: &Path) {
     let _ = std::process::Command::new("xdg-open").arg(dir).spawn();
 }
 
+/// 字の見える部分（一番上の字の上端から、並びの基準の線まで）の高さを測った文字列。
+/// フォントによって字の上下の余白が違い（Mac のヒラギノと Windows の游ゴシックで違って見えた）、
+/// 行の高さで中央に置くと字が上に寄るので、見える部分で中央に置く。下に出る部分（g や y）は数えない。
+struct Ink {
+    galley: std::sync::Arc<egui::Galley>,
+    /// 行の上端から、見える部分の上端まで
+    top: f32,
+    height: f32,
+}
+
+fn ink(p: &egui::Painter, text: &str, font: egui::FontId, color: Color32) -> Ink {
+    let galley = p.layout_no_wrap(text.to_string(), font, color);
+    let mut top = f32::INFINITY;
+    let mut base = f32::NEG_INFINITY;
+    for row in &galley.rows {
+        for g in &row.row.glyphs {
+            if g.uv_rect.size.y > 0.0 {
+                top = top.min(row.pos.y + g.pos.y + g.uv_rect.offset.y);
+                base = base.max(row.pos.y + g.pos.y);
+            }
+        }
+    }
+    if !top.is_finite() || !base.is_finite() || base <= top {
+        // 字の形が分からないときは、行の高さで置く
+        let h = galley.size().y;
+        return Ink { galley, top: 0.0, height: h };
+    }
+    Ink { galley, top, height: base - top }
+}
+
+impl Ink {
+    /// 見える部分の中央が `center` に来るように描く。
+    fn paint(self, p: &egui::Painter, center: egui::Pos2) {
+        let pos = egui::pos2(center.x - self.galley.size().x / 2.0, center.y - self.height / 2.0 - self.top);
+        p.galley(pos, self.galley, Color32::PLACEHOLDER);
+    }
+}
+
 /// 大きいボタン。名前を中央に、キーの案内をその下に、どちらも横の中央にそろえて描く。
 /// `flash` が真のときは、キーで押されたことが分かるよう押した色で描く。
 fn big_button(ui: &mut egui::Ui, size: egui::Vec2, label: &str, key: Option<&str>, primary: bool, flash: bool) -> bool {
@@ -147,16 +185,19 @@ fn big_button(ui: &mut egui::Ui, size: egui::Vec2, label: &str, key: Option<&str
     let weak = if primary { Color32::from_white_alpha(170) } else { v.weak_text_color() };
     let p = ui.painter();
     p.rect_filled(rect, egui::CornerRadius::same(10), fill);
-    // 日本語のフォントは字の上の余白が広く、枠の中央に置くと字が上に寄って見えるので、大きさに合わせて少し下げる
-    let center = rect.center() + egui::vec2(0.0, 2.0);
+    let center = rect.center();
     match key {
         Some(k) => {
-            p.text(center - egui::vec2(0.0, 9.0), egui::Align2::CENTER_CENTER, label, egui::FontId::proportional(24.0), text);
-            p.text(center + egui::vec2(0.0, 17.0), egui::Align2::CENTER_CENTER, k, egui::FontId::proportional(13.0), weak);
+            // 名前とキーの名前を 1 つの塊として、上下の中央に置く
+            let a = ink(p, label, egui::FontId::proportional(24.0), text);
+            let b = ink(p, k, egui::FontId::proportional(13.0), weak);
+            let gap = 13.0;
+            let top = center.y - (a.height + gap + b.height) / 2.0;
+            let (ha, hb) = (a.height, b.height);
+            a.paint(p, egui::pos2(center.x, top + ha / 2.0));
+            b.paint(p, egui::pos2(center.x, top + ha + gap + hb / 2.0));
         }
-        None => {
-            p.text(center + egui::vec2(0.0, 3.0), egui::Align2::CENTER_CENTER, label, egui::FontId::proportional(22.0), text);
-        }
+        None => ink(p, label, egui::FontId::proportional(22.0), text).paint(p, center),
     }
     resp.on_hover_cursor(egui::CursorIcon::PointingHand).clicked()
 }
@@ -178,7 +219,7 @@ fn lang_toggle(ui: &mut egui::Ui, cur: Lang) -> Lang {
             ui.painter().rect_filled(r, egui::CornerRadius::same(6), v.widgets.hovered.weak_bg_fill);
         }
         let color = if on { Color32::WHITE } else { v.text_color() };
-        ui.painter().text(r.center() + egui::vec2(0.0, 2.0), egui::Align2::CENTER_CENTER, name, egui::FontId::proportional(15.0), color);
+        ink(ui.painter(), name, egui::FontId::proportional(15.0), color).paint(ui.painter(), r.center());
         if resp.on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
             pick = l;
         }
