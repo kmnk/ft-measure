@@ -1,6 +1,7 @@
 //! 項目を進める状態の機械。ファイル・音・時計・socket に触れず、
 //! 時刻・キー・値の写しを受けて、出来事を返す。
 
+use crate::i18n::{lang, tr, Lang, Text};
 use crate::items::{Item, ItemKind};
 use chrono::{DateTime, Local};
 use std::collections::BTreeMap;
@@ -109,7 +110,7 @@ impl Session {
         matches!(self.records.get(self.idx), Some(Record::Interval { recording: true, .. }))
     }
 
-    fn dirs(&self) -> &[String] {
+    fn dirs(&self) -> &[Text] {
         match &self.items[self.idx].kind {
             ItemKind::Sequence(d) => d,
             _ => &[],
@@ -149,8 +150,8 @@ impl Session {
 
     fn measure(&mut self, t: f64, time: DateTime<Local>, snap: &Snapshot, recent: &[Snapshot]) -> Vec<Event> {
         let reps = self.cfg.reps;
-        let name = self.items[self.idx].name.clone();
-        let dirs: Vec<String> = self.dirs().to_vec();
+        let name = self.items[self.idx].name.show().to_string();
+        let dirs: Vec<Text> = self.dirs().to_vec();
         let next_dir = self.next_dir();
         match &mut self.records[self.idx] {
             Record::Interval { samples, recording, start, duration } => {
@@ -175,7 +176,7 @@ impl Session {
             }
             rec => {
                 if snap.is_empty() {
-                    return vec![Event::Warn("値がまだ 1 つも届いていません。記録しませんでした".into())];
+                    return vec![Event::Warn(tr("No FT values have arrived yet. Nothing was recorded", "値がまだ 1 つも届いていません。記録しませんでした").into())];
                 }
                 let sp = spread(recent, snap);
                 let moving = sp.values().any(|d| *d > self.cfg.move_threshold);
@@ -183,7 +184,7 @@ impl Session {
                     Record::Pose(list) => (name.clone(), 0, list),
                     Record::Sequence(list) => {
                         let (d, _) = next_dir.unwrap();
-                        (format!("{}: {}", name, dirs[d]), d, list)
+                        (format!("{}: {}", name, dirs[d].show()), d, list)
                     }
                     Record::Interval { .. } => unreachable!(),
                 };
@@ -195,20 +196,20 @@ impl Session {
     }
 
     fn undo(&mut self) -> Vec<Event> {
-        let name = self.items[self.idx].name.clone();
-        let dirs: Vec<String> = self.dirs().to_vec();
+        let name = self.items[self.idx].name.show().to_string();
+        let dirs: Vec<Text> = self.dirs().to_vec();
         match &mut self.records[self.idx] {
             Record::Pose(list) => match list.pop() {
                 Some(_) => vec![Event::Undone { label: name }, Event::Changed],
-                None => vec![Event::Warn("取り消す記録がありません".into())],
+                None => vec![Event::Warn(tr("Nothing to undo", "取り消す記録がありません").into())],
             },
             Record::Sequence(list) => match list.pop() {
-                Some(r) => vec![Event::Undone { label: format!("{}: {}", name, dirs[r.dir]) }, Event::Changed],
-                None => vec![Event::Warn("取り消す記録がありません".into())],
+                Some(r) => vec![Event::Undone { label: format!("{}: {}", name, dirs[r.dir].show()) }, Event::Changed],
+                None => vec![Event::Warn(tr("Nothing to undo", "取り消す記録がありません").into())],
             },
             Record::Interval { samples, recording, start, duration } => {
                 if samples.is_empty() && !*recording && duration.is_none() {
-                    return vec![Event::Warn("取り消す記録がありません".into())];
+                    return vec![Event::Warn(tr("Nothing to undo", "取り消す記録がありません").into())];
                 }
                 samples.clear();
                 *recording = false;
@@ -234,46 +235,88 @@ impl Session {
         ev
     }
 
-    /// 画面と chatbox に出す、今の項目と進み具合の 1 行。
-    pub fn status(&self) -> String {
+    /// 窓に出す、今の項目と進み具合。
+    pub fn progress(&self) -> Progress {
         let total = self.items.len();
-        let pos = format!("（{}/{}）", self.idx + 1, total);
         if self.finished {
-            return "測定が終わりました".into();
+            return Progress {
+                no: total,
+                total,
+                title: tr("Measurement finished", "測定が終わりました").into(),
+                step: String::new(),
+                hint: String::new(),
+                done: true,
+            };
         }
         let item = &self.items[self.idx];
+        let name = item.name.show().to_string();
         let reps = self.cfg.reps;
-        match &self.records[self.idx] {
+        let next_hint = tr("Press Enter for the next item", "Enter で次へ").to_string();
+        let (title, step, hint) = match &self.records[self.idx] {
             Record::Pose(list) => {
                 let next = list.len() + 1;
                 if list.len() >= reps {
-                    format!("{} {}/{} 済み{} Enter で次へ", item.name, list.len(), reps, pos)
+                    (name, format!("{}/{} {}", list.len(), reps, tr("done", "済み")), next_hint)
                 } else if next >= 2 {
-                    format!("{} {}/{}{} 普通の顔に戻してから", item.name, next, reps, pos)
+                    (name, format!("{next}/{reps}"), tr("Return to a neutral face first", "普通の顔に戻してから").to_string())
                 } else {
-                    format!("{} {}/{}{}", item.name, next, reps, pos)
+                    (name, format!("{next}/{reps}"), String::new())
                 }
             }
             Record::Sequence(list) => {
                 let dirs = self.dirs();
                 let (d, round) = self.next_dir().unwrap();
                 if list.len() >= dirs.len() * reps && d == 0 {
-                    format!("{} {}周 済み{} Enter で次へ", item.name, reps, pos)
+                    let step = match lang() {
+                        Lang::En => format!("{reps} rounds done"),
+                        Lang::Ja => format!("{reps}周 済み"),
+                    };
+                    (name, step, next_hint)
                 } else {
-                    format!("{}: {} {}/{}{}", item.name, dirs[d], round, reps, pos)
+                    (format!("{}: {}", name, dirs[d].show()), format!("{round}/{reps}"), String::new())
                 }
             }
             Record::Interval { samples, recording, .. } => {
                 if *recording {
-                    format!("{} 記録中 測定で止める{}", item.name, pos)
+                    (name, tr("recording, Measure to stop", "記録中 測定で止める").to_string(), String::new())
                 } else if !samples.is_empty() {
-                    format!("{} 記録済み{} Enter で次へ", item.name, pos)
+                    (name, tr("recorded", "記録済み").to_string(), next_hint)
                 } else {
-                    format!("{} 測定で始める{}", item.name, pos)
+                    (name, tr("Measure to start recording", "測定で始める").to_string(), String::new())
                 }
             }
-        }
+        };
+        Progress { no: self.idx + 1, total, title, step, hint, done: false }
     }
+
+    /// chatbox に出す、今の項目と進み具合の 1 行。
+    pub fn status(&self) -> String {
+        let p = self.progress();
+        if p.done {
+            return p.title;
+        }
+        let pos = match lang() {
+            Lang::En => format!(" ({}/{})", p.no, p.total),
+            Lang::Ja => format!("（{}/{}）", p.no, p.total),
+        };
+        let hint = if p.hint.is_empty() { String::new() } else { format!(" {}", p.hint) };
+        format!("{} {}{}{}", p.title, p.step, pos, hint)
+    }
+}
+
+/// 今の項目と進み具合を、窓で分けて出せる形にしたもの。
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Progress {
+    /// 何番目の項目か（1 から）
+    pub no: usize,
+    pub total: usize,
+    /// 項目の名前（順に作る表情なら向きまで）
+    pub title: String,
+    /// 回や、区間の記録の状態
+    pub step: String,
+    /// 次にすること
+    pub hint: String,
+    pub done: bool,
 }
 
 #[cfg(test)]
@@ -305,14 +348,14 @@ mod tests {
     #[test]
     fn session_pose_records_undo_and_extra() {
         let mut s = session();
-        assert_eq!(s.status(), "表A 1/3（1/3）");
+        assert_eq!(s.status(), "表A 1/3 (1/3)");
         for v in [0.1, 0.5, 0.2] {
             s.handle_key(Key::Measure, 0.0, now(), &snap(v), &[snap(v)]);
         }
-        assert_eq!(s.status(), "表A 3/3 済み（1/3） Enter で次へ");
+        assert_eq!(s.status(), "表A 3/3 done (1/3) Press Enter for the next item");
         let ev = s.handle_key(Key::Undo, 0.0, now(), &snap(0.0), &[]);
         assert_eq!(ev[0], Event::Undone { label: "表A".into() });
-        assert_eq!(s.status(), "表A 3/3（1/3） 普通の顔に戻してから");
+        assert_eq!(s.status(), "表A 3/3 (1/3) Return to a neutral face first");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.3), &[]);
         let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.4), &[]);
         assert!(matches!(ev[0], Event::Recorded { rep: 4, of: 3, .. }));
@@ -345,18 +388,18 @@ mod tests {
     fn session_sequence_rotates_and_undo_returns_direction() {
         let mut s = session();
         s.handle_key(Key::Next, 0.0, now(), &snap(0.0), &[]);
-        assert_eq!(s.status(), "向き: 上 1/3（2/3）");
+        assert_eq!(s.status(), "向き: 上 1/3 (2/3)");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.9), &[]);
-        assert_eq!(s.status(), "向き: 下 1/3（2/3）");
+        assert_eq!(s.status(), "向き: 下 1/3 (2/3)");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.1), &[]);
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.0), &[]);
         let ev = s.handle_key(Key::Undo, 0.0, now(), &snap(0.0), &[]);
         assert_eq!(ev[0], Event::Undone { label: "向き: 上".into() });
-        assert_eq!(s.status(), "向き: 上 2/3（2/3）");
+        assert_eq!(s.status(), "向き: 上 2/3 (2/3)");
         for v in [0.8, 0.2, 0.7, 0.3] {
             s.handle_key(Key::Measure, 0.0, now(), &snap(v), &[]);
         }
-        assert_eq!(s.status(), "向き 3周 済み（2/3） Enter で次へ");
+        assert_eq!(s.status(), "向き 3 rounds done (2/3) Press Enter for the next item");
         let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.6), &[]);
         assert!(matches!(&ev[0], Event::Recorded { label, rep: 4, .. } if label == "向き: 上"));
         match &s.records[1] {

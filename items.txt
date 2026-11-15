@@ -1,36 +1,42 @@
-# ft-measure の項目の一覧
-# 1 行に 1 項目。空の行と # で始まる行は読まない。
-# 「区間:」で始まる行は区間の項目（測定で始めて、もう一度測定で止める）。
-# 「順に:」で始まる行は順に作る表情（| で区切った最初が項目の名前、残りが向き）。
-# それ以外の行は、普通の顔に戻しながら 3 回測る表情。
+# ft-measure item list
+# One item per line. Blank lines and lines starting with # are ignored.
+# Write each name as "English // 日本語". The English name goes into the output files;
+# the window and the chatbox show the language chosen in the window.
+# "interval:" lines are readings: Measure starts recording, Measure again stops it.
+# "sequence:" lines are split by "|": the first part is the item, the rest are the steps in order.
+# Other lines are poses measured 3 times, returning to a neutral face in between.
+#
+# 項目の一覧。名前は「English // 日本語」と書く。書き出すファイルには英語の名前が入る。
+# 「interval:」（区間:）は読み上げ、「sequence:」（順に:）は | で区切った順に作る表情。
 
-# 目と眉
-両目をぎゅっと閉じる
-目を思い切り見開く
-下まぶたを上げて目を細める（まぶしいとき）
-眉を思い切り上げる（驚き）
-眉を寄せて下げる（しかめ面）
+# Eyes and brows
+Close both eyes tightly // 両目をぎゅっと閉じる
+Open both eyes as wide as you can // 目を思い切り見開く
+Squint by raising the lower eyelids (as in bright light) // 下まぶたを上げて目を細める（まぶしいとき）
+Raise both brows as high as you can (surprise) // 眉を思い切り上げる（驚き）
+Pull the brows together and down (frown) // 眉を寄せて下げる（しかめ面）
 
-# 口
-口を縦に最大まで開く
-口を開いたまま唇を横に引き伸ばす
-口を閉じたまま口角を横上に引き上げる
-口を閉じたまま口角を下に引き下げる
-唇をすぼめて前に突き出す
-歯を噛み合わせて唇を上下に開く（「いー」）
-口を閉じて頬を膨らませる
-舌を前に最大まで出す
+# Mouth
+Open the mouth vertically as far as you can // 口を縦に最大まで開く
+With the mouth open, stretch the lips sideways // 口を開いたまま唇を横に引き伸ばす
+With the mouth closed, pull the corners out and up // 口を閉じたまま口角を横上に引き上げる
+With the mouth closed, pull the corners down // 口を閉じたまま口角を下に引き下げる
+Pucker the lips and push them forward // 唇をすぼめて前に突き出す
+Bite the teeth together and open the lips ("eee") // 歯を噛み合わせて唇を上下に開く（「いー」）
+Close the mouth and puff out the cheeks // 口を閉じて頬を膨らませる
+Stick the tongue out as far as you can // 舌を前に最大まで出す
 
-# 向きや左右のある表情
-順に: ウィンク | 右目だけ閉じる | 左目だけ閉じる
-順に: 目線（顔は正面） | 上 | 下 | 右 | 左
-順に: 唇 | 上下の唇をぎゅっと押し合わせる（「んー」とこらえる口） | 上下の唇を口の中へ巻き込んで隠す
-順に: 下顎（口を少し開けて） | 右にずらす | 左にずらす
-順に: 舌を出して先を | 上に向ける | 下に向ける | 右に向ける | 左に向ける
+# Expressions with directions or sides
+sequence: Wink // ウィンク | Close the right eye only // 右目だけ閉じる | Close the left eye only // 左目だけ閉じる
+sequence: Gaze (face forward) // 目線（顔は正面） | Up // 上 | Down // 下 | Right // 右 | Left // 左
+sequence: Lips // 唇 | Press the lips together hard ("mmm") // 上下の唇をぎゅっと押し合わせる（「んー」とこらえる口） | Roll the lips into the mouth to hide them // 上下の唇を口の中へ巻き込んで隠す
+sequence: Jaw (mouth slightly open) // 下顎（口を少し開けて） | Shift right // 右にずらす | Shift left // 左にずらす
+sequence: Tongue out, point the tip // 舌を出して先を | Up // 上に向ける | Down // 下に向ける | Right // 右に向ける | Left // 左に向ける
 
-# 読み上げ（北原白秋「五十音」）
-区間: 無表情で読み上げ
-区間: 軽い笑顔で読み上げ
+# Reading aloud (a short passage of your choice, e.g. Kitahara Hakushu "Gojuon")
+# 読み上げ（北原白秋「五十音」など）
+interval: Read aloud with a neutral face // 無表情で読み上げ
+interval: Read aloud with a light smile // 軽い笑顔で読み上げ
 
-# 最後に
-力を抜いた無表情
+# Last
+Relaxed neutral face // 力を抜いた無表情

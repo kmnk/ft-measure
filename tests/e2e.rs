@@ -52,6 +52,11 @@ fn chatbox_listener(port: u16) -> Arc<Mutex<Vec<String>>> {
 }
 
 fn run(dir: &Path, items: &str, script: &str, stdin: &str, port: u16, chat_port: u16) -> String {
+    run_lang(dir, items, script, stdin, port, chat_port, "ja")
+}
+
+/// `lang` の表示の言語で動かす。
+fn run_lang(dir: &Path, items: &str, script: &str, stdin: &str, port: u16, chat_port: u16, lang: &str) -> String {
     let items_path = dir.join("items.txt");
     std::fs::write(&items_path, items).unwrap();
     let script_path = dir.join("script.txt");
@@ -63,6 +68,7 @@ fn run(dir: &Path, items: &str, script: &str, stdin: &str, port: u16, chat_port:
         .arg("--script").arg(&script_path)
         .arg("--last-file").arg(dir.parent().unwrap().join("last.txt"))
         .arg("--echo-sounds")
+        .args(["--lang", lang])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -244,5 +250,40 @@ fn e2e_port_in_use_is_reported() {
         .output()
         .unwrap();
     assert_eq!(out.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&out.stdout).contains("他のアプリが使っています"));
+    // 言語を選んでいなければ英語で出す
+    assert!(String::from_utf8_lossy(&out.stdout).contains("is used by another app"));
+}
+
+#[test]
+fn e2e_files_use_english_names_and_display_follows_language() {
+    // 名前を「English // 日本語」で書いた一覧で、日本語の表示を選んで測る
+    let tmp = tempfile::tempdir().unwrap();
+    let items = "Close eyes // 目を閉じる\nsequence: Gaze // 目線 | Up // 上 | Down // 下\n";
+    let chat = chatbox_listener(19111);
+    let p = "/avatar/parameters/FT/In/EyeClosed";
+    let script = format!("send {p} 0.5\nwait 300\nmeasure\nnext\nmeasure\nwait 300\nquit\n");
+    let d = tmp.path().join("r");
+    std::fs::create_dir_all(&d).unwrap();
+    run_lang(&d, items, &script, "lang-dev\n\n", 19110, 19111, "ja");
+    let csv = std::fs::read_to_string(find(&d.join("out"), "_summary.csv").unwrap()).unwrap();
+    let raw = std::fs::read_to_string(find(&d.join("out"), "_raw.jsonl").unwrap()).unwrap();
+    assert!(csv.contains(",Close eyes,pose,") && csv.contains(",Gaze: Up,pose,"), "{csv}");
+    assert!(raw.contains("\"item\":\"Gaze: Up\"") && raw.contains("\"direction\":\"Up\""), "{raw}");
+    for ja in ["目を閉じる", "目線", "上"] {
+        assert!(!csv.contains(ja) && !raw.contains(ja), "{ja} がファイルに出ている");
+    }
+    std::thread::sleep(Duration::from_millis(200));
+    let msgs = chat.lock().unwrap().clone();
+    assert!(msgs.iter().any(|x| x.contains("目を閉じる 1/3（1/2）")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("目線: 下 1/3（2/2）")), "{msgs:?}");
+
+    // 英語の表示では、chatbox も英語の名前になる
+    let chat2 = chatbox_listener(19113);
+    let d2 = tmp.path().join("r2");
+    std::fs::create_dir_all(&d2).unwrap();
+    run_lang(&d2, items, &script, "lang-dev\n\n", 19112, 19113, "en");
+    std::thread::sleep(Duration::from_millis(200));
+    let msgs = chat2.lock().unwrap().clone();
+    assert!(msgs.iter().any(|x| x.contains("Close eyes 1/3 (1/2)")), "{msgs:?}");
+    assert!(msgs.iter().any(|x| x.contains("Gaze: Down 1/3 (2/2)")), "{msgs:?}");
 }

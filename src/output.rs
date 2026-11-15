@@ -93,12 +93,12 @@ impl Writer {
             match (rec, &item.kind) {
                 (Record::Pose(list), _) => {
                     let refs: Vec<&Rec> = list.iter().collect();
-                    self.pose_rows(&mut rows, no, &item.name, &refs);
+                    self.pose_rows(&mut rows, no, &item.name.en, &refs);
                 }
                 (Record::Sequence(list), ItemKind::Sequence(dirs)) => {
                     for (d, dir) in dirs.iter().enumerate() {
                         let refs: Vec<&Rec> = list.iter().filter(|r| r.dir == d).collect();
-                        self.pose_rows(&mut rows, no, &format!("{}: {}", item.name, dir), &refs);
+                        self.pose_rows(&mut rows, no, &format!("{}: {}", item.name.en, dir.en), &refs);
                     }
                 }
                 (Record::Interval { samples, recording: false, duration: Some(dur), .. }, _) => {
@@ -107,7 +107,7 @@ impl Writer {
                         let vals: Vec<f64> = samples.iter().filter_map(|s| s.values.get(k)).map(|v| *v as f64).collect();
                         let Some(s) = summarize(&vals) else { continue };
                         rows.push(vec![
-                            self.info.device.clone(), self.info.memo.clone(), no.to_string(), item.name.clone(),
+                            self.info.device.clone(), self.info.memo.clone(), no.to_string(), item.name.en.clone(),
                             "interval".into(), k.clone(), s.n.to_string(), fmt6(*dur), fmt6(s.median), fmt6(s.min),
                             fmt6(s.max), fmt6(s.p5), fmt6(s.p95), String::new(),
                         ]);
@@ -142,7 +142,7 @@ impl Writer {
                 (Record::Pose(list), _) => {
                     for (j, r) in list.iter().enumerate() {
                         lines.push(json!({
-                            "type": "pose", "item_no": no, "item": item.name, "rep": j + 1,
+                            "type": "pose", "item_no": no, "item": item.name.en, "rep": j + 1,
                             "time": r.time.to_rfc3339(), "moving": r.moving,
                             "values": values_json(&r.values),
                             "spread": r.spread.iter().map(|(k, v)| (k.clone(), json!(round6(*v)))).collect::<Map<_, _>>(),
@@ -154,8 +154,8 @@ impl Writer {
                     for r in list {
                         counts[r.dir] += 1;
                         lines.push(json!({
-                            "type": "pose", "item_no": no, "item": format!("{}: {}", item.name, dirs[r.dir]),
-                            "direction": dirs[r.dir], "rep": counts[r.dir],
+                            "type": "pose", "item_no": no, "item": format!("{}: {}", item.name.en, dirs[r.dir].en),
+                            "direction": dirs[r.dir].en, "rep": counts[r.dir],
                             "time": r.time.to_rfc3339(), "moving": r.moving,
                             "values": values_json(&r.values),
                             "spread": r.spread.iter().map(|(k, v)| (k.clone(), json!(round6(*v)))).collect::<Map<_, _>>(),
@@ -165,7 +165,7 @@ impl Writer {
                 (Record::Interval { samples, recording: false, duration: Some(_), .. }, _) => {
                     for (j, s) in samples.iter().enumerate() {
                         lines.push(json!({
-                            "type": "sample", "item_no": no, "item": item.name, "n": j + 1,
+                            "type": "sample", "item_no": no, "item": item.name.en, "n": j + 1,
                             "t": round6(s.t), "time": s.time.to_rfc3339(),
                             "values": values_json(&s.values),
                         }));

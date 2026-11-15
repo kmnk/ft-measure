@@ -1,5 +1,7 @@
 //! 項目の一覧のファイルを読む。
 
+use crate::i18n::{tr, Text};
+
 /// 既定の一覧（exe に埋め込む）。
 pub const DEFAULT_ITEMS: &str = include_str!("../items.txt");
 
@@ -8,61 +10,70 @@ pub enum ItemKind {
     /// 普通の顔に戻しながら決まった回数を測る表情
     Pose,
     /// 向きを順に回って測る表情。向きの名前の列
-    Sequence(Vec<String>),
+    Sequence(Vec<Text>),
     /// 測定で始めて測定で止める区間
     Interval,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Item {
-    pub name: String,
+    pub name: Text,
     pub kind: ItemKind,
 }
 
-fn strip_tag<'a>(line: &'a str, tag: &str) -> Option<&'a str> {
-    for colon in [":", "："] {
-        let t = format!("{tag}{colon}");
-        if let Some(rest) = line.strip_prefix(&t) {
-            return Some(rest.trim());
+fn strip_tag<'a>(line: &'a str, tags: &[&str]) -> Option<&'a str> {
+    for tag in tags {
+        for colon in [":", "："] {
+            let t = format!("{tag}{colon}");
+            if line.len() >= t.len() && line.is_char_boundary(t.len()) && line[..t.len()].eq_ignore_ascii_case(&t) {
+                return Some(line[t.len()..].trim());
+            }
         }
     }
     None
 }
 
+/// `English // 日本語` を 2 つの名前にする。`//` が無ければ、どちらも同じ名前にする。
+fn text(s: &str) -> Text {
+    match s.split_once("//") {
+        Some((en, ja)) if !en.trim().is_empty() && !ja.trim().is_empty() => Text::new(en.trim(), ja.trim()),
+        Some((en, ja)) => Text::same(if en.trim().is_empty() { ja.trim() } else { en.trim() }),
+        None => Text::same(s.trim()),
+    }
+}
+
 /// 一覧の文字列を読む。誤りは「何行目が何か」で返す。
-pub fn parse(text: &str) -> Result<Vec<Item>, String> {
-    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+pub fn parse(src: &str) -> Result<Vec<Item>, String> {
+    let src = src.strip_prefix('\u{feff}').unwrap_or(src);
     let mut items = Vec::new();
-    for (i, raw) in text.lines().enumerate() {
+    for (i, raw) in src.lines().enumerate() {
         let line = raw.trim();
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
         let lineno = i + 1;
-        let item = if let Some(rest) = strip_tag(line, "区間") {
+        let item = if let Some(rest) = strip_tag(line, &["interval", "区間"]) {
             if rest.is_empty() {
-                return Err(format!("{lineno} 行目: 区間の項目の名前がありません"));
+                return Err(format!("{} {lineno}: {}", tr("line", "行"), tr("the interval item has no name", "区間の項目の名前がありません")));
             }
-            Item { name: rest.to_string(), kind: ItemKind::Interval }
-        } else if let Some(rest) = strip_tag(line, "順に") {
-            let parts: Vec<String> = rest
-                .split(['|', '｜'])
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect();
+            Item { name: text(rest), kind: ItemKind::Interval }
+        } else if let Some(rest) = strip_tag(line, &["sequence", "順に"]) {
+            let parts: Vec<Text> = rest.split(['|', '｜']).filter(|s| !s.trim().is_empty()).map(text).collect();
             if parts.len() < 2 {
                 return Err(format!(
-                    "{lineno} 行目: 順に作る表情は「名前 | 向き | 向き…」の形で、向きが 1 つ以上要ります"
+                    "{} {lineno}: {}",
+                    tr("line", "行"),
+                    tr("write a sequence as \"name | step | step…\" with at least one step", "順に作る表情は「名前 | 向き | 向き…」の形で、向きが 1 つ以上要ります")
                 ));
             }
             Item { name: parts[0].clone(), kind: ItemKind::Sequence(parts[1..].to_vec()) }
         } else {
-            Item { name: line.to_string(), kind: ItemKind::Pose }
+            Item { name: text(line), kind: ItemKind::Pose }
         };
         items.push(item);
     }
     if items.is_empty() {
-        return Err("項目が 1 つもありません".to_string());
+        return Err(tr("the list has no items", "項目が 1 つもありません").to_string());
     }
     Ok(items)
 }
@@ -78,16 +89,26 @@ mod tests {
         assert_eq!(v.len(), 4);
         assert_eq!(v[0], Item { name: "両目を閉じる".into(), kind: ItemKind::Pose });
         assert_eq!(v[1].kind, ItemKind::Sequence(vec!["上".into(), "下".into()]));
-        assert_eq!(v[1].name, "目線");
+        assert_eq!(v[1].name, Text::same("目線"));
         assert_eq!(v[2], Item { name: "読み上げ".into(), kind: ItemKind::Interval });
         assert_eq!(v[3].kind, ItemKind::Sequence(vec!["上".into(), "下".into()]));
     }
 
     #[test]
+    fn items_parse_english_tags_and_two_languages() {
+        let t = "Close eyes // 目を閉じる\nSequence: Gaze // 目線 | Up // 上 | Down\ninterval: Read // 読む\n";
+        let v = parse(t).unwrap();
+        assert_eq!(v[0].name, Text::new("Close eyes", "目を閉じる"));
+        assert_eq!(v[1].name, Text::new("Gaze", "目線"));
+        assert_eq!(v[1].kind, ItemKind::Sequence(vec![Text::new("Up", "上"), Text::same("Down")]));
+        assert_eq!(v[2], Item { name: Text::new("Read", "読む"), kind: ItemKind::Interval });
+    }
+
+    #[test]
     fn items_parse_errors() {
         assert!(parse("# only\n").is_err());
-        assert!(parse("順に: 目線\n").unwrap_err().contains("1 行目"));
-        assert!(parse("a\n区間:\n").unwrap_err().contains("2 行目"));
+        assert!(parse("順に: 目線\n").unwrap_err().contains(" 1:"));
+        assert!(parse("a\n区間:\n").unwrap_err().contains(" 2:"));
     }
 
     #[test]
@@ -108,6 +129,13 @@ mod tests {
         assert_eq!(seq.len(), 5);
         assert_eq!(seq.iter().sum::<usize>(), 14);
         assert_eq!(interval, 2);
-        assert_eq!(v.last().unwrap().name, "力を抜いた無表情");
+        assert_eq!(v.last().unwrap().name.ja, "力を抜いた無表情");
+        // 書き出しに使う英語の名前が、どの項目と向きにもある
+        for i in &v {
+            assert!(i.name.en.is_ascii() && i.name.en != i.name.ja, "{:?}", i.name);
+            if let ItemKind::Sequence(d) = &i.kind {
+                assert!(d.iter().all(|x| x.en.is_ascii() && x.en != x.ja), "{d:?}");
+            }
+        }
     }
 }

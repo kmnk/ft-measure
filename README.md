@@ -1,51 +1,66 @@
-# ft-measure
+# FT Measure
 
-VRChat のフェイストラッキング（FT）の値を、表情ごとに測って書き出す Windows のアプリです。VRChat の OSC の出力から、アバターのパラメータのうち名前が決まった始めの部分（既定 `FT/In/`）で始まるものを受け、項目の一覧に沿って測った値を CSV と JSON Lines に書きます。
+A Windows app that records VRChat face tracking (FT) values per expression. It listens to VRChat's OSC output, takes the avatar parameters that start with a fixed prefix (default `FT/In/`), walks you through a list of expressions, and saves the measured values as CSV and JSON Lines.
 
-測った値は、FT の設定を機器ごと（VR の機器、Selfie Expression など）に決める材料に使うためのものです。
+The results are meant as material for per-device FT settings (VR headset trackers, Selfie Expression, and so on).
 
-## 使い方
+[日本語](#日本語)
 
-1. VRChat で OSC を有効にします（Action Menu の Options > OSC > Enabled）。
-2. 測るアバターに着替えます。アバターは、Avatar Descriptor の Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>`（例 `FT/In/JawOpen`）のパラメータに出している必要があります。
-3. `ft-measure.exe` をダブルクリックし、名前（例 `selfie`、`vive`）とメモを入れます。
-4. 画面と chatbox に出る項目の表情を作り、キーを押して測ります。
+## Usage
 
-| キー | 働き |
-| --- | --- |
-| スペース | 測定（区間の項目では、開始と停止） |
-| Enter | 次の項目へ |
-| Backspace | 取り消し（今の項目で最後に測った 1 回） |
-| Ctrl+C | 途中で終わる |
+1. In VRChat, turn on OSC (Action Menu > Options > OSC > Enabled).
+2. Change into an avatar whose Avatar Descriptor forwards the Unified Expressions keys to parameters named `FT/In/<key>` (for example `FT/In/JawOpen`) with Face Tracking > Forward to Animator.
+3. Double-click `ft-measure.exe`. Check that the dot at the bottom of the window turns green when you move your face, enter a device name (for example `selfie`, `vive`) and an optional memo, and press Start.
+4. Make the expression shown in the window and in the chatbox, then press Measure.
 
-- 表情は、測るたびに普通の顔に戻してから作り直し、3 回測ります。
-- 「順に」の項目は、chatbox に出る向きに動かして止め、スペースを押します。向きを順に回って 3 周します。
-- 読み上げの項目は、スペースで始め、文を読み終えたらもう一度スペースで止めます。
-- 測るたびに音が鳴ります。押す直前に値が動いていたときは、短い音が 3 回鳴ります。取り消して測り直せます。
-- chatbox は他の人にも見えるので、ひとりのインスタンスで使ってください。
+| Button | Key | What it does |
+| --- | --- | --- |
+| Measure | Space | Records the current values (for readings, starts and stops recording) |
+| Next | Enter | Moves to the next item |
+| Undo | Backspace | Removes the last measurement of the current item |
 
-## 書き出すもの
+- The keys work while the FT Measure window is the active window. The window shows a warning when it is not.
+- Each pose is measured 3 times. Return to a neutral face between measurements.
+- For "sequence" items, move to the step shown in the chatbox, hold it, and press Measure. The steps go round 3 times.
+- For readings, press Measure to start, read the passage, and press Measure again to stop.
+- A beep sounds for each action. Three short beeps mean the face was moving just before you pressed Measure; you can undo and measure again.
+- The chatbox is visible to other players, so use a private instance.
+- The window can be shown in English or Japanese (top right). The choice is remembered.
 
-exe の隣の `ft-measure` フォルダに、測り始めるたびに 2 つのファイルができます。
+## Output
 
-- `<名前>_<日時>_summary.csv`: 項目とキーごとの、回数・中央値・最小・最大・動いていた回数（区間の項目は、拾った数・長さ・5% と 95% の点など）
-- `<名前>_<日時>_raw.jsonl`: 1 回ごとの値と、区間の時系列
+Each session creates two files in the `ft-measure` folder next to the exe. All content is in English.
 
-測るたびに書き直すので、途中で閉じても、それまでに測った分は残ります。
+- `<name>_<date-time>_summary.csv`: per item and key, the count, median, min, max, and how many measurements were moving (for readings: samples, duration, 5th and 95th percentiles)
+- `<name>_<date-time>_raw.jsonl`: every measurement and the time series of readings
 
-## 項目の一覧
+The files are rewritten after every measurement, so closing the window keeps everything measured so far.
 
-exe の隣の `items.txt` を書き換えると、測る項目を変えられます。1 行に 1 項目で、`区間:` で始まる行は区間の項目、`順に: 名前 | 向き | 向き…` の行は順に作る表情です。
+## Item list
 
-## オプション
+Edit `items.txt` next to the exe to change the items. One item per line, written as `English name // 日本語の名前`. Lines starting with `interval:` are readings; lines like `sequence: name | step | step…` are sequences. The English names go into the output files.
 
-`ft-measure.exe --help` で一覧が出ます。主なもの:
+## Options
 
-- `--port 9001`: OSC を受けるポート
-- `--prefix FT/In/`: 測るパラメータの始めの部分
-- `--reps 3`: 1 つの表情を測る回数
-- `--move-threshold 0.05`、`--move-window 0.5`: 「動いていた」とみなす値の差と、見る秒数
-- `--no-chatbox`: chatbox に送らない
+Run `ft-measure.exe --help` for the full list. The main ones:
+
+- `--port 9001`: the port to receive OSC on
+- `--prefix FT/In/`: the parameter prefix to record
+- `--reps 3`: how many times each pose is measured
+- `--move-threshold 0.05`, `--move-window 0.5`: the value change and the seconds that count as "moving"
+- `--no-chatbox`: do not send to the chatbox
+- `--lang en|ja`: the display language
+
+## 日本語
+
+VRChat のフェイストラッキング（FT）の値を、表情ごとに測って書き出す Windows のアプリです。
+
+1. VRChat で OSC をオンにします（アクションメニューの Options > OSC > Enabled）。
+2. Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>` のパラメータに出すアバターに着替えます。
+3. `ft-measure.exe` をダブルクリックし、右上で「日本語」を選びます。顔を動かして下の丸が緑になるのを確かめ、機器の名前とメモを入れて「始める」を押します。
+4. 窓と chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は Enter、「取り消し」は Backspace です。キーは、この窓が選ばれているときに効きます。
+
+書き出すファイルは英語です。`items.txt` の名前は `English // 日本語` の形で書き、窓と chatbox には選んだ言語の名前が出ます。
 
 ## License
 

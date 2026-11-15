@@ -21,14 +21,14 @@ pub enum Sound {
 impl Sound {
     pub fn name(self) -> &'static str {
         match self {
-            Sound::Measure => "測定",
-            Sound::Moving => "動いていた",
-            Sound::Next => "次へ",
-            Sound::Undo => "取り消し",
-            Sound::Warn => "警告",
-            Sound::IntervalStart => "区間の開始",
-            Sound::IntervalStop => "区間の終わり",
-            Sound::Finish => "終わり",
+            Sound::Measure => crate::i18n::tr("measure", "測定"),
+            Sound::Moving => crate::i18n::tr("moving", "動いていた"),
+            Sound::Next => crate::i18n::tr("next", "次へ"),
+            Sound::Undo => crate::i18n::tr("undo", "取り消し"),
+            Sound::Warn => crate::i18n::tr("warning", "警告"),
+            Sound::IntervalStart => crate::i18n::tr("recording start", "区間の開始"),
+            Sound::IntervalStop => crate::i18n::tr("recording stop", "区間の終わり"),
+            Sound::Finish => crate::i18n::tr("finish", "終わり"),
         }
     }
 
@@ -83,7 +83,7 @@ impl SoundPlayer {
 
     pub fn play(&self, s: Sound) {
         if self.echo {
-            crate::say(&format!("[音] {}", s.name()));
+            crate::say(&format!("[{}] {}", crate::i18n::tr("sound", "音"), s.name()));
         }
         let _ = self.tx.send(s);
     }
