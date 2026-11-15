@@ -433,7 +433,12 @@ impl App {
         });
         ui.add_space(14.0);
         let n = prep.items.len();
-        let src = if prep.items_label == "(built-in)" { tr("built-in", "組み込み").to_string() } else { prep.items_label.clone() };
+        // 一覧のファイルは、長いパスで行が読みにくくならないよう、ファイルの名前だけを出す
+        let src = if prep.items_label == "(built-in)" {
+            tr("built-in", "組み込み").to_string()
+        } else {
+            Path::new(&prep.items_label).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| prep.items_label.clone())
+        };
         ui.label(RichText::new(match i18n::lang() {
             Lang::En => format!("{n} items ({src}). Each pose is measured 3 times."),
             Lang::Ja => format!("{n} 項目（{src}）。表情は 3 回ずつ測ります。"),
