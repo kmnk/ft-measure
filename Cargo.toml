@@ -2,7 +2,7 @@
 name = "ft-measure"
 version = "0.2.0"
 edition = "2021"
-description = "Record VRChat face tracking values per expression from OSC and write per-item statistics"
+description = "Record VRChat face tracking values per expression from OSC and write them to a JSON Lines file"
 license = "MIT OR Apache-2.0"
 publish = false
 

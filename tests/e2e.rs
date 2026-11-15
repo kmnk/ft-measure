@@ -230,7 +230,8 @@ fn e2e_full_run_last_name_and_kill() {
         assert_eq!(got, w, "{id}");
     }
     assert_eq!(seen.len(), 28, "{:?}", seen.keys());
-    assert!(!raw.contains("0.999"));
+    // 文字列ではなく値で見る（時刻の文字列が 0.999 を含むことがある）
+    assert!(!rows.iter().any(|r| r["values"]["JawOpen"].as_f64() == Some(0.999)), "取り消した回が残っている");
 
     // 区間の拾いは、その区間で送った値を持つ
     for id in ["read_neutral", "read_smile"] {
@@ -297,7 +298,10 @@ fn e2e_full_run_last_name_and_kill() {
     while Instant::now() < end {
         if let Some(p) = find(&d3.join("out"), ".jsonl") {
             let t = std::fs::read_to_string(p).unwrap_or_default();
-            if t.lines().any(|l| l.contains("\"type\":\"pose\"") && l.contains("\"id\":\"eyes_close\"") && l.contains("0.4")) {
+            let pose = t.lines().filter_map(|l| serde_json::from_str::<Value>(l).ok()).any(|r| {
+                r["type"] == "pose" && r["id"] == "eyes_close" && r["values"]["JawOpen"].as_f64() == Some(0.4)
+            });
+            if pose {
                 seen_pose = true;
                 break;
             }

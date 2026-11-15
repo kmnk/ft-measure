@@ -317,8 +317,6 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
             for ev in &events {
                 match ev {
                     Event::Recorded { label, rep, of, keys, .. } => {
-                        // 「動いていた」は記録に残すだけで、知らせない。顔の追跡の値は止めているつもりでも
-                        // ほぼ毎回しきい値を超え、知らせが出続けたため（2026-11-15）
                         sounds.play(Sound::Measure);
                         let rec = match i18n::lang() {
                             Lang::En => format!("Recorded: {label} {rep}/{of} ({keys} {})", if *keys == 1 { "key" } else { "keys" }),
