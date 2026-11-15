@@ -24,7 +24,7 @@ jobs:
         run: |
           $dir = "ft-measure"
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
-          Copy-Item target/release/ft-measure.exe, items.txt, README.md, LICENSE-MIT, LICENSE-APACHE -Destination $dir
+          Copy-Item target/release/ft-measure.exe, README.md, LICENSE-MIT, LICENSE-APACHE -Destination $dir
           Compress-Archive -Path $dir -DestinationPath ft-measure-windows-x64.zip -Force
       - name: Check no VC runtime dependency
         shell: pwsh

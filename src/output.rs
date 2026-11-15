@@ -14,7 +14,6 @@ pub struct SessionInfo {
     pub device: String,
     pub memo: String,
     pub started: DateTime<Local>,
-    pub items_file: String,
     pub prefix: String,
     pub tool_version: String,
 }
@@ -132,7 +131,6 @@ impl Writer {
             "device": self.info.device,
             "memo": self.info.memo,
             "started": self.info.started.to_rfc3339(),
-            "items_file": self.info.items_file,
             "prefix": self.info.prefix,
             "tool_version": self.info.tool_version,
         })];
@@ -203,7 +201,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let info = SessionInfo {
             device: "vi:ve/1".into(), memo: "照明あり, カメラ上".into(), started: Local::now(),
-            items_file: "items.txt".into(), prefix: "FT/In/".into(), tool_version: "0.1.0".into(),
+            prefix: "FT/In/".into(), tool_version: "0.1.0".into(),
         };
         let w = Writer::new(dir.path(), info).unwrap();
         assert!(w.summary_path.file_name().unwrap().to_str().unwrap().starts_with("vi_ve_1_"));
@@ -242,7 +240,7 @@ mod tests {
         assert_eq!(rows[0]["type"], "session");
         assert_eq!(rows[0]["device"], "vi:ve/1");
         assert_eq!(rows[0]["memo"], "照明あり, カメラ上");
-        assert_eq!(rows[0]["items_file"], "items.txt");
+        assert!(rows[0].get("items_file").is_none());
         assert_eq!(rows[0]["prefix"], "FT/In/");
         assert_eq!(rows[0]["tool_version"], "0.1.0");
         assert!(rows[0]["started"].as_str().unwrap().len() > 10);

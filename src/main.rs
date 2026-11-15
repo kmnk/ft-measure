@@ -45,9 +45,6 @@ pub struct Args {
     /// 測るパラメータの始めの部分（/avatar/parameters/ の後）
     #[arg(long, default_value = "FT/In/")]
     prefix: String,
-    /// 項目の一覧のファイル（既定は exe の隣の items.txt、無ければ組み込みの一覧）
-    #[arg(long)]
-    items: Option<PathBuf>,
     /// 書き出し先のディレクトリ（既定は exe の隣の ft-measure）
     #[arg(long)]
     out: Option<PathBuf>,
@@ -157,7 +154,6 @@ fn main() {
 /// 測り始める前に用意するもの。OSC は、名前を聞いている間から受け始め、値が届いているかを窓に出す。
 pub struct Prepared {
     pub items: Vec<items::Item>,
-    pub items_label: String,
     pub table: osc::Table,
     pub osc_events: mpsc::Receiver<osc::OscEvent>,
     pub last_path: PathBuf,
@@ -173,21 +169,11 @@ pub struct PrepareError {
 
 pub fn prepare(args: &Args) -> Result<Prepared, PrepareError> {
     let dir = exe_dir();
-    let items_err = |message: String| PrepareError { message, code: 2 };
-    let (items_text, items_label) = match &args.items {
-        Some(p) => match std::fs::read_to_string(p) {
-            Ok(t) => (t, p.display().to_string()),
-            Err(e) => return Err(items_err(format!("{} {}: {e}", tr("Cannot read the item list", "項目の一覧を読めません:"), p.display()))),
-        },
-        None => {
-            let p = dir.join("items.txt");
-            match std::fs::read_to_string(&p) {
-                Ok(t) => (t, p.display().to_string()),
-                Err(_) => (items::DEFAULT_ITEMS.to_string(), "(built-in)".to_string()),
-            }
-        }
-    };
-    let items = items::parse(&items_text).map_err(|e| items_err(format!("{} {items_label}: {e}", tr("Item list", "項目の一覧"))))?;
+    // 一覧は exe に埋め込んだものだけを読む。読み損ねるのは作り損ねで、単体の試験で見つける
+    let items = items::parse(items::DEFAULT_ITEMS).map_err(|e| PrepareError {
+        message: format!("{}: {e}", tr("The built-in item list is broken", "組み込みの項目の一覧が壊れています")),
+        code: 2,
+    })?;
     let socket = osc::bind(&args.host, args.port).map_err(|e| {
         let message = if e.kind() == io::ErrorKind::AddrInUse {
             match i18n::lang() {
@@ -205,7 +191,7 @@ pub fn prepare(args: &Args) -> Result<Prepared, PrepareError> {
     let last_path = last_path(args);
     let saved = Saved::load(&last_path);
     let out_dir = args.out.clone().unwrap_or_else(|| dir.join("ft-measure"));
-    Ok(Prepared { items, items_label, table, osc_events: orx, last_path, saved, out_dir })
+    Ok(Prepared { items, table, osc_events: orx, last_path, saved, out_dir })
 }
 
 /// 窓を出さずに、台本のキーで測る（試験用）。
@@ -243,13 +229,12 @@ pub fn measure(args: &Args, prep: Prepared, device: String, memo: String, mut so
     Saved { name: device.clone(), lang: Some(i18n::lang()) }.store(&prep.last_path);
 
     say(&format!("ft-measure {}  OSC {}:{}", env!("CARGO_PKG_VERSION"), args.host, args.port));
-    say(&format!("{}: {} ({})", tr("Item list", "項目の一覧"), prep.items_label, prep.items.len()));
+    say(&format!("{}: {}", tr("Items", "項目"), prep.items.len()));
 
     let info = SessionInfo {
         device,
         memo: memo.trim().to_string(),
         started: Local::now(),
-        items_file: prep.items_label.clone(),
         prefix: args.prefix.clone(),
         tool_version: env!("CARGO_PKG_VERSION").to_string(),
     };
