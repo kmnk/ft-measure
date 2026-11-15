@@ -129,7 +129,7 @@ fn open_folder(dir: &Path) {
     let _ = std::process::Command::new("xdg-open").arg(dir).spawn();
 }
 
-/// 字の見える部分（一番上の字の上端から、並びの基準の線まで）の高さを測った文字列。
+/// 字の見える部分（一番上の字の上端から、英字は並びの基準の線まで、日本語などの字は字の下端まで）の高さを測った文字列。
 /// フォントによって字の上下の余白が違い（Mac のヒラギノと Windows の游ゴシックで違って見えた）、
 /// 行の高さで中央に置くと字が上に寄るので、見える部分で中央に置く。下に出る部分（g や y）は数えない。
 struct Ink {
@@ -146,8 +146,12 @@ fn ink(p: &egui::Painter, text: &str, font: egui::FontId, color: Color32) -> Ink
     for row in &galley.rows {
         for g in &row.row.glyphs {
             if g.uv_rect.size.y > 0.0 {
-                top = top.min(row.pos.y + g.pos.y + g.uv_rect.offset.y);
-                base = base.max(row.pos.y + g.pos.y);
+                let ink_top = row.pos.y + g.pos.y + g.uv_rect.offset.y;
+                top = top.min(ink_top);
+                // 英字は下に出る部分（g や y）を数えず基準の線までにする。日本語の字は基準の線より少し下まで描かれ、
+                // そこまで数えないと下に寄って見える（Windows の游ゴシックで見た）
+                let bottom = if g.chr.is_ascii() { row.pos.y + g.pos.y } else { ink_top + g.uv_rect.size.y };
+                base = base.max(bottom);
             }
         }
     }
