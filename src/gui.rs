@@ -120,6 +120,23 @@ fn use_japanese_font(ctx: &egui::Context) {
     ));
 }
 
+/// 中身が窓に収まらず `overflow` だけはみ出しているとき、画面に入る範囲で窓を縦に伸ばす。
+/// 字の行の高さはフォント（Windows の游ゴシックと Mac のヒラギノ）と画面の拡大率で違い、
+/// 決めた高さでは収まらないことがあるため。縮めはしない。収まらない分は今までどおりスクロールで見る。
+fn fit_window(ctx: &egui::Context, overflow: f32) {
+    if overflow <= 1.0 {
+        return;
+    }
+    let (inner, monitor) = ctx.input(|i| (i.viewport().inner_rect, i.viewport().monitor_size));
+    let (Some(inner), Some(monitor)) = (inner, monitor) else { return };
+    // 題の帯とタスクバーの分を残す
+    let max_h = (monitor.y - 96.0).max(inner.height());
+    let want = (inner.height() + overflow + 4.0).min(max_h);
+    if want > inner.height() + 1.0 {
+        ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(inner.width(), want)));
+    }
+}
+
 fn open_folder(dir: &Path) {
     #[cfg(windows)]
     let _ = std::process::Command::new("explorer").arg(dir).spawn();
@@ -361,7 +378,7 @@ impl App {
             "Make each expression shown here and press Measure. The values VRChat sends are saved per expression.",
             "表示される表情を作って「測る」を押します。VRChat が送る値を、表情ごとに保存します。",
         ));
-        ui.add_space(8.0);
+        ui.add_space(6.0);
         card(ui, |ui| {
             ui.label(RichText::new(tr("Before you start", "始める前に")).strong());
             let steps = [
@@ -571,7 +588,7 @@ impl eframe::App for App {
         egui::Panel::bottom("bottom").frame(bar(ui)).show(ui, |ui| self.status_bar(ui, running));
         let body = egui::Frame::central_panel(ui.style()).inner_margin(egui::Margin::symmetric(24, 20));
         egui::CentralPanel::default().frame(body).show(ui, |ui| {
-            egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match &self.screen {
+            let out = egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| match &self.screen {
                 Screen::Error(e) => {
                     let e = e.clone();
                     ui.add_space(8.0);
@@ -586,6 +603,7 @@ impl eframe::App for App {
                 Screen::Setup { .. } => self.setup_ui(ui),
                 Screen::Running => self.running_ui(ui),
             });
+            fit_window(ui.ctx(), out.content_size.y - out.inner_rect.height());
         });
         // 値が届いているかを見直すため、何も起きなくても時々描き直す
         ui.ctx().request_repaint_after(Duration::from_millis(250));
