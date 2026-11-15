@@ -4,7 +4,7 @@
 # the window and the chatbox show the language chosen in the window.
 # "interval:" lines are readings: Measure starts recording, Measure again stops it.
 # "sequence:" lines are split by "|": the first part is the item, the rest are the steps in order.
-# Other lines are poses measured 3 times, returning to a neutral face in between.
+# Other lines are poses measured 3 times, relaxing your face in between.
 #
 # 項目の一覧。名前は「English // 日本語」と書く。書き出すファイルには英語の名前が入る。
 # 「interval:」（区間:）は読み上げ、「sequence:」（順に:）は | で区切った順に作る表情。

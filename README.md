@@ -20,7 +20,7 @@ The results are meant as material for per-device FT settings (VR headset tracker
 | Undo | Backspace | Removes the last measurement of the current item |
 
 - The keys work while the FT Measure window is the active window. The window shows a warning when it is not.
-- Each pose is measured 3 times. Return to a neutral face between measurements.
+- Each pose is measured 3 times. Relax your face between measurements, then make the expression again.
 - For "sequence" items, move to the step shown in the chatbox, hold it, and press Measure. The steps go round 3 times.
 - For readings, press Measure to start, read the passage, and press Measure again to stop.
 - A beep sounds for each action. Three short beeps mean the face was moving just before you pressed Measure; you can undo and measure again.

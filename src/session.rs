@@ -258,7 +258,7 @@ impl Session {
                 if list.len() >= reps {
                     (name, format!("{}/{} {}", list.len(), reps, tr("done", "済み")), next_hint)
                 } else if next >= 2 {
-                    (name, format!("{next}/{reps}"), tr("Return to a neutral face first", "普通の顔に戻してから").to_string())
+                    (name, format!("{next}/{reps}"), tr("Relax your face, then make it again", "顔をリラックスさせてから、もう一度").to_string())
                 } else {
                     (name, format!("{next}/{reps}"), String::new())
                 }
@@ -355,7 +355,7 @@ mod tests {
         assert_eq!(s.status(), "表A 3/3 done (1/3) Press Enter for the next item");
         let ev = s.handle_key(Key::Undo, 0.0, now(), &snap(0.0), &[]);
         assert_eq!(ev[0], Event::Undone { label: "表A".into() });
-        assert_eq!(s.status(), "表A 3/3 (1/3) Return to a neutral face first");
+        assert_eq!(s.status(), "表A 3/3 (1/3) Relax your face, then make it again");
         s.handle_key(Key::Measure, 0.0, now(), &snap(0.3), &[]);
         let ev = s.handle_key(Key::Measure, 0.0, now(), &snap(0.4), &[]);
         assert!(matches!(ev[0], Event::Recorded { rep: 4, of: 3, .. }));
