@@ -60,7 +60,7 @@ pub fn run(args: Args) -> i32 {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("FT Measure")
-            .with_inner_size([780.0, 680.0])
+            .with_inner_size([780.0, 740.0])
             .with_min_inner_size([560.0, 480.0]),
         ..Default::default()
     };
@@ -189,6 +189,12 @@ fn field_label(ui: &mut egui::Ui, text: &str) {
         ui.add_space(9.0);
         ui.add(egui::Label::new(text).extend());
     });
+}
+
+/// 入力欄の下の、何を入れるかの説明。
+fn help(ui: &mut egui::Ui, text: &str) {
+    ui.set_max_width(420.0);
+    ui.add(egui::Label::new(RichText::new(text).size(14.0).weak()).wrap());
 }
 
 fn card(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
@@ -324,10 +330,25 @@ impl App {
         ui.add_space(10.0);
         egui::Grid::new("setup").num_columns(2).min_row_height(38.0).spacing([14.0, 12.0]).show(ui, |ui| {
             field_label(ui, tr("Device name", "機器の名前"));
-            ui.add(egui::TextEdit::singleline(name).hint_text(tr("e.g. selfie, vive", "例 selfie、vive")).desired_width(320.0).margin(egui::Margin { left: 10, right: 10, top: 11, bottom: 7 }));
+            ui.vertical(|ui| {
+                ui.add(egui::TextEdit::singleline(name).hint_text(tr("e.g. selfie, vive", "例 selfie、vive")).desired_width(420.0).margin(egui::Margin { left: 10, right: 10, top: 11, bottom: 7 }));
+                help(ui, tr(
+                    "The tracker you measure with. It becomes the start of the file names.",
+                    "測るのに使う機器です。ファイルの名前の始めになります。",
+                ));
+            });
             ui.end_row();
             field_label(ui, tr("Memo", "メモ"));
-            let r = ui.add(egui::TextEdit::singleline(memo).hint_text(tr("Optional, e.g. lighting", "空でよい。例 照明")).desired_width(320.0).margin(egui::Margin { left: 10, right: 10, top: 11, bottom: 7 }));
+            let r = ui
+                .vertical(|ui| {
+                    let r = ui.add(egui::TextEdit::singleline(memo).hint_text(tr("Optional", "空でよい")).desired_width(420.0).margin(egui::Margin { left: 10, right: 10, top: 11, bottom: 7 }));
+                    help(ui, tr(
+                        "Conditions that can change the values, to tell sessions apart later. e.g. room lights on, camera above the monitor, VRCFT 5.3",
+                        "値が変わりうる条件を書いておくと、後で測った回を見分けられます。例: 部屋の照明あり、カメラはモニタの上、VRCFT 5.3",
+                    ));
+                    r
+                })
+                .inner;
             if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                 go = true;
             }
