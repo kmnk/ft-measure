@@ -266,7 +266,7 @@ fn e2e_full_run_last_name_and_kill() {
     let msgs = chat.lock().unwrap().clone();
     let has = |t: &str| msgs.iter().any(|x| x.contains(t));
     assert!(has("両目をぎゅっと閉じる 1/3（1/21）"), "{msgs:?}");
-    assert!(has("両目をぎゅっと閉じる 2/3（1/21） 顔をリラックスさせてから、もう一度"), "{msgs:?}");
+    assert!(has("両目をぎゅっと閉じる 2/3（1/21） 1 回目を記録。顔をリラックスさせて 2 回目へ"), "{msgs:?}");
     assert!(has("値がまだ 1 つも届いていません"), "{msgs:?}");
     assert!(has("あと 2 回測ってから次へ進めます"), "{msgs:?}");
     assert!(has("ウィンク: 右目だけ閉じる 1/3（14/21）"), "{msgs:?}");
