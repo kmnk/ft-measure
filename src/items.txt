@@ -37,6 +37,8 @@ sequence: Wink // ウィンク | Close the right eye only // 右目だけ閉じ�
 sequence: Gaze (face forward) // 目線（顔は正面） | Up // 上 [gaze_up] | Down // 下 [gaze_down] | Right // 右 [gaze_right] | Left // 左 [gaze_left]
 sequence: Lips // 唇 | Press the lips together hard ("mmm") // 上下の唇をぎゅっと押し合わせる（「んー」とこらえる口） [lips_press] | Roll the lips into the mouth to hide them // 上下の唇を口の中へ巻き込んで隠す [lips_roll]
 sequence: Jaw (mouth slightly open) // 下顎（口を少し開けて） | Shift right // 右にずらす [jaw_right] | Shift left // 左にずらす [jaw_left]
+sequence: Raise only the right mouth corner // 右の口角だけを上げて | Mouth closed // 口を閉じる [mouth_smile_right_closed] | Mouth slightly open // 口を少し開ける [mouth_smile_right_open]
+sequence: Raise only the left mouth corner // 左の口角だけを上げて | Mouth closed // 口を閉じる [mouth_smile_left_closed] | Mouth slightly open // 口を少し開ける [mouth_smile_left_open]
 sequence: Tongue out, point the tip // 舌を出して先を | Up // 上に向ける [tongue_up] | Down // 下に向ける [tongue_down] | Right // 右に向ける [tongue_right] | Left // 左に向ける [tongue_left]
 
 # Reading aloud (a short passage of your choice, e.g. "The North Wind and the Sun" or Kitahara Hakushu "Gojuon")

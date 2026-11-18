@@ -59,6 +59,8 @@ The items are built into the exe and cannot be changed, so that every file has t
 | Gaze (face forward): Up / Down / Right / Left | `gaze_up` / `gaze_down` / `gaze_right` / `gaze_left` |
 | Lips: Press the lips together hard ("mmm") / Roll the lips into the mouth to hide them | `lips_press` / `lips_roll` |
 | Jaw (mouth slightly open): Shift right / Shift left | `jaw_right` / `jaw_left` |
+| Raise only the right mouth corner: Mouth closed / Mouth slightly open | `mouth_smile_right_closed` / `mouth_smile_right_open` |
+| Raise only the left mouth corner: Mouth closed / Mouth slightly open | `mouth_smile_left_closed` / `mouth_smile_left_open` |
 | Tongue out, point the tip: Up / Down / Right / Left | `tongue_up` / `tongue_down` / `tongue_right` / `tongue_left` |
 | Read aloud with a neutral face | `read_neutral` |
 | Read aloud with a light smile | `read_smile` |

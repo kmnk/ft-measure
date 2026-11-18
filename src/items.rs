@@ -225,6 +225,10 @@ mod tests {
         ("Lips: Roll the lips into the mouth to hide them", "lips_roll"),
         ("Jaw (mouth slightly open): Shift right", "jaw_right"),
         ("Jaw (mouth slightly open): Shift left", "jaw_left"),
+        ("Raise only the right mouth corner: Mouth closed", "mouth_smile_right_closed"),
+        ("Raise only the right mouth corner: Mouth slightly open", "mouth_smile_right_open"),
+        ("Raise only the left mouth corner: Mouth closed", "mouth_smile_left_closed"),
+        ("Raise only the left mouth corner: Mouth slightly open", "mouth_smile_left_open"),
         ("Tongue out, point the tip: Up", "tongue_up"),
         ("Tongue out, point the tip: Down", "tongue_down"),
         ("Tongue out, point the tip: Right", "tongue_right"),
@@ -237,7 +241,7 @@ mod tests {
     #[test]
     fn items_default_list_matches_spec() {
         let v = parse(DEFAULT_ITEMS).unwrap();
-        assert_eq!(v.len(), 21);
+        assert_eq!(v.len(), 23);
         let pose = v.iter().filter(|i| i.kind == ItemKind::Pose).count();
         let seq: Vec<usize> = v
             .iter()
@@ -247,10 +251,10 @@ mod tests {
             })
             .collect();
         let interval = v.iter().filter(|i| matches!(i.kind, ItemKind::Interval(Some(_)))).count();
-        // 表情 13 + 無表情 1、順に 5（向きは合わせて 14）、区間 2
+        // 表情 13 + 無表情 1、順に 7（向きは合わせて 18）、区間 2
         assert_eq!(pose, 14);
-        assert_eq!(seq.len(), 5);
-        assert_eq!(seq.iter().sum::<usize>(), 14);
+        assert_eq!(seq.len(), 7);
+        assert_eq!(seq.iter().sum::<usize>(), 18);
         assert_eq!(interval, 2);
         assert_eq!(v.last().unwrap().name.ja, "力を抜いた無表情");
         // 書き出しに使う英語の名前が、どの項目と向きにもある
