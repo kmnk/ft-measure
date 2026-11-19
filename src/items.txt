@@ -3,7 +3,8 @@
 # Write each name as "English // 日本語 [id]". The English name and the id go into the output file;
 # the window and the chatbox show the language chosen in the window.
 # Every item has an id (for a sequence, every step has one): lowercase letters, digits and "_".
-# The FT generator finds the items by their ids. Changing or removing an id needs a new FORMAT_VERSION in output.rs.
+# The FT generator finds the items by their ids. Changing or removing an id needs a new FORMAT_VERSION in output.rs
+# (before 1.0.0 an id may change without one).
 # "interval:" lines are readings: Measure starts recording, Measure again stops it.
 #   After "|" you can write an example of what to read; it is shown before and while recording.
 # "sequence:" lines are split by "|": the first part is the item, the rest are the steps in order.
@@ -11,7 +12,8 @@
 #
 # 項目の一覧（exe に埋め込む。利用者は変えられない）。名前は「English // 日本語 [id]」と書く。
 # 書き出すファイルには英語の名前と id が入る。全部の項目（順に作る表情は各向き）に id を付ける。
-# 生成器は id で項目を探すので、id を変える・消すときは output.rs の FORMAT_VERSION を上げる。
+# 生成器は id で項目を探すので、id を変える・消すときは output.rs の FORMAT_VERSION を上げる
+# （1.0.0 より前は、上げずに id を変えることがある）。
 # 「interval:」（区間:）は読み上げで、| の後に読み上げる文の例を書ける（始める前と記録中に出る）。
 # 「sequence:」（順に:）は | で区切った順に作る表情。
 
@@ -24,7 +26,8 @@ Pull the brows together and down (frown) // 眉を寄せて下げる（しかめ
 
 # Mouth
 Open the mouth vertically as far as you can // 口を縦に最大まで開く [jaw_open]
-With the mouth open, stretch the lips sideways // 口を開いたまま唇を横に引き伸ばす [mouth_stretch]
+With the mouth open, stretch the lips sideways // 口を開いたまま唇を横に引き伸ばす [mouth_open_stretch]
+With the mouth open wide, push the lips forward into an "O" // 口を大きく開けたまま唇を前に突き出す（大きな「お」） [mouth_open_funnel]
 With the mouth closed, pull the corners out and up // 口を閉じたまま口角を横上に引き上げる [mouth_smile]
 With the mouth closed, pull the corners down // 口を閉じたまま口角を下に引き下げる [mouth_frown]
 Pucker the lips and push them forward // 唇をすぼめて前に突き出す [lips_pucker]

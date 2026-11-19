@@ -208,7 +208,8 @@ mod tests {
         ("Raise both brows as high as you can (surprise)", "brows_up"),
         ("Pull the brows together and down (frown)", "brows_down"),
         ("Open the mouth vertically as far as you can", "jaw_open"),
-        ("With the mouth open, stretch the lips sideways", "mouth_stretch"),
+        ("With the mouth open, stretch the lips sideways", "mouth_open_stretch"),
+        ("With the mouth open wide, push the lips forward into an \"O\"", "mouth_open_funnel"),
         ("With the mouth closed, pull the corners out and up", "mouth_smile"),
         ("With the mouth closed, pull the corners down", "mouth_frown"),
         ("Pucker the lips and push them forward", "lips_pucker"),
@@ -241,7 +242,7 @@ mod tests {
     #[test]
     fn items_default_list_matches_spec() {
         let v = parse(DEFAULT_ITEMS).unwrap();
-        assert_eq!(v.len(), 23);
+        assert_eq!(v.len(), 24);
         let pose = v.iter().filter(|i| i.kind == ItemKind::Pose).count();
         let seq: Vec<usize> = v
             .iter()
@@ -251,8 +252,8 @@ mod tests {
             })
             .collect();
         let interval = v.iter().filter(|i| matches!(i.kind, ItemKind::Interval(Some(_)))).count();
-        // 表情 13 + 無表情 1、順に 7（向きは合わせて 18）、区間 2
-        assert_eq!(pose, 14);
+        // 表情 14 + 無表情 1、順に 7（向きは合わせて 18）、区間 2
+        assert_eq!(pose, 15);
         assert_eq!(seq.len(), 7);
         assert_eq!(seq.iter().sum::<usize>(), 18);
         assert_eq!(interval, 2);

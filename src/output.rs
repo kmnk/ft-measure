@@ -10,7 +10,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 /// 書き出す形の版。生成器が読む形を変えたとき（キーの意味を変える・消す、項目の id を変える・消す）に上げる。
-/// キーや項目を足すだけなら上げない。`format_version` を持たない前の出力（`_raw.jsonl`）を版 0 とみなす
+/// キーや項目を足すだけなら上げない。1.0.0 より前は、上げずに項目の id を変えることがある（0.4.0 で mouth_stretch を mouth_open_stretch にした）。
+/// `format_version` を持たない前の出力（`_raw.jsonl`）を版 0 とみなす
 pub const FORMAT_VERSION: u32 = 1;
 
 pub struct SessionInfo {

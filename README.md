@@ -34,7 +34,7 @@ Each session creates one file, `<name>_<date-time>.jsonl`, in the `ft-measure` f
 - Line 1 (`"type": "session"`): `format_version` (the version of this file format, now `1`), `device`, `memo`, `started`, `prefix`, `tool_version`
 - Following lines: one measurement of a pose (`"type": "pose"`, with `rep`, the `values` of every key and their `spread` just before Measure) or one sample of a reading (`"type": "sample"`, with `n` and `t`). Each line has `item_no`, `item` (the English name) and `id`
 
-`format_version` goes up when the meaning of a key or an `id` changes or one is removed; adding keys or items keeps it.
+`format_version` goes up when the meaning of a key or an `id` changes or one is removed; adding keys or items keeps it. Before 1.0.0, an `id` may change without a new `format_version` (0.4.0 renamed `mouth_stretch` to `mouth_open_stretch`).
 
 ## Items
 
@@ -48,7 +48,8 @@ The items are built into the exe and cannot be changed, so that every file has t
 | Raise both brows as high as you can (surprise) | `brows_up` |
 | Pull the brows together and down (frown) | `brows_down` |
 | Open the mouth vertically as far as you can | `jaw_open` |
-| With the mouth open, stretch the lips sideways | `mouth_stretch` |
+| With the mouth open, stretch the lips sideways | `mouth_open_stretch` |
+| With the mouth open wide, push the lips forward into an "O" | `mouth_open_funnel` |
 | With the mouth closed, pull the corners out and up | `mouth_smile` |
 | With the mouth closed, pull the corners down | `mouth_frown` |
 | Pucker the lips and push them forward | `lips_pucker` |

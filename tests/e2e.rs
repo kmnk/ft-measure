@@ -26,7 +26,8 @@ const ITEMS: &[(Kind, &[(&str, &str)])] = &[
     (Kind::Pose, &[("Raise both brows as high as you can (surprise)", "brows_up")]),
     (Kind::Pose, &[("Pull the brows together and down (frown)", "brows_down")]),
     (Kind::Pose, &[("Open the mouth vertically as far as you can", "jaw_open")]),
-    (Kind::Pose, &[("With the mouth open, stretch the lips sideways", "mouth_stretch")]),
+    (Kind::Pose, &[("With the mouth open, stretch the lips sideways", "mouth_open_stretch")]),
+    (Kind::Pose, &[("With the mouth open wide, push the lips forward into an \"O\"", "mouth_open_funnel")]),
     (Kind::Pose, &[("With the mouth closed, pull the corners out and up", "mouth_smile")]),
     (Kind::Pose, &[("With the mouth closed, pull the corners down", "mouth_frown")]),
     (Kind::Pose, &[("Pucker the lips and push them forward", "lips_pucker")]),
@@ -93,6 +94,7 @@ fn full_script() -> (String, BTreeMap<String, Vec<f64>>) {
     s += "send /avatar/parameters/GestureLeft 3\nsend /avatar/parameters/FT/InX 0.7\n";
     let mut want: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut k = 0;
+    let first_seq = ITEMS.iter().position(|(kind, _)| matches!(kind, Kind::Sequence)).unwrap();
     for (n, (kind, rows)) in ITEMS.iter().enumerate() {
         match kind {
             Kind::Pose => {
@@ -113,7 +115,7 @@ fn full_script() -> (String, BTreeMap<String, Vec<f64>>) {
             Kind::Sequence => {
                 // 向きは 3 周する
                 for rep in 0..3 {
-                    if n == 13 && rep == 1 {
+                    if n == first_seq && rep == 1 {
                         s += &format!("send {P} 0.0\nwait {WAIT}\nmeasure\nundo\n");
                     }
                     for (d, (_, id)) in rows.iter().enumerate() {
@@ -225,7 +227,7 @@ fn e2e_full_run_last_name_and_kill() {
 
     // 2 行目からの全部の行が id を持ち、項目の名前と id の組が表と一致する。moving は無く、pose の行は spread を持つ
     let table: BTreeMap<&str, &str> = ITEMS.iter().flat_map(|(_, r)| r.iter().map(|(n, id)| (*id, *n))).collect();
-    assert_eq!(table.len(), 34);
+    assert_eq!(table.len(), 35);
     let mut seen: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     for r in &rows[1..] {
         let id = r["id"].as_str().unwrap_or_else(|| panic!("id が無い: {r}"));
@@ -247,7 +249,7 @@ fn e2e_full_run_last_name_and_kill() {
         w.sort_by(|a, b| a.partial_cmp(b).unwrap());
         assert_eq!(got, w, "{id}");
     }
-    assert_eq!(seen.len(), 32, "{:?}", seen.keys());
+    assert_eq!(seen.len(), 33, "{:?}", seen.keys());
     // 文字列ではなく値で見る（時刻の文字列が 0.999 を含むことがある）
     assert!(!rows.iter().any(|r| r["values"]["JawOpen"].as_f64() == Some(0.999)), "取り消した回が残っている");
     assert!(!rows.iter().any(|r| r["values"]["JawOpen"].as_f64() == Some(0.0)), "順に作る表情で取り消した回が残っている");
@@ -279,16 +281,17 @@ fn e2e_full_run_last_name_and_kill() {
     std::thread::sleep(Duration::from_millis(200));
     let msgs = chat.lock().unwrap().clone();
     let has = |t: &str| msgs.iter().any(|x| x.contains(t));
-    assert!(has("両目をぎゅっと閉じる 1/3（1/23）"), "{msgs:?}");
-    assert!(has("両目をぎゅっと閉じる 2/3（1/23） 1 回目を記録。顔をリラックスさせて 2 回目へ"), "{msgs:?}");
+    assert!(has("両目をぎゅっと閉じる 1/3（1/24）"), "{msgs:?}");
+    assert!(has("両目をぎゅっと閉じる 2/3（1/24） 1 回目を記録。顔をリラックスさせて 2 回目へ"), "{msgs:?}");
     assert!(has("値がまだ 1 つも届いていません"), "{msgs:?}");
     assert!(has("あと 2 回測ってから次へ進めます"), "{msgs:?}");
-    assert!(has("ウィンク: 右目だけ閉じる 1/3（14/23）"), "{msgs:?}");
+    assert!(has("口を大きく開けたまま唇を前に突き出す（大きな「お」） 1/3（8/24）"), "{msgs:?}");
+    assert!(has("ウィンク: 右目だけ閉じる 1/3（15/24）"), "{msgs:?}");
     // 取り消しの後は、消した回の向きがもう一度知らされる
-    assert!(msgs.iter().filter(|x| x.contains("ウィンク: 右目だけ閉じる 2/3（14/23）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
-    assert!(has("右の口角だけを上げて: 口を閉じる 1/3（18/23）"), "{msgs:?}");
-    assert!(has("左の口角だけを上げて: 口を少し開ける 3/3（19/23）"), "{msgs:?}");
-    assert!(has("無表情で読み上げ 測定で始める（21/23） 例: あめんぼ赤いな"), "{msgs:?}");
+    assert!(msgs.iter().filter(|x| x.contains("ウィンク: 右目だけ閉じる 2/3（15/24）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
+    assert!(has("右の口角だけを上げて: 口を閉じる 1/3（19/24）"), "{msgs:?}");
+    assert!(has("左の口角だけを上げて: 口を少し開ける 3/3（20/24）"), "{msgs:?}");
+    assert!(has("無表情で読み上げ 測定で始める（22/24） 例: あめんぼ赤いな"), "{msgs:?}");
     assert!(has("無表情で読み上げ 記録中"), "{msgs:?}");
     assert!(has("測定が終わりました"), "{msgs:?}");
     assert!(!has("動いていた"), "{msgs:?}");
@@ -355,7 +358,7 @@ fn e2e_items_file_next_to_exe_is_ignored() {
     assert_eq!(rows[1]["id"], "eyes_close", "{}", rows[1]);
     assert_eq!(rows[1]["item"], "Close both eyes tightly");
     assert!(!stdout.contains("Something else"), "{stdout}");
-    assert!(stdout.contains("Items: 23"), "{stdout}");
+    assert!(stdout.contains("Items: 24"), "{stdout}");
 }
 
 #[test]
@@ -422,11 +425,12 @@ fn e2e_english_display_uses_english_names() {
     std::thread::sleep(Duration::from_millis(200));
     let msgs = chat.lock().unwrap().clone();
     let has = |t: &str| msgs.iter().any(|x| x.contains(t));
-    assert!(has("Close both eyes tightly 1/3 (1/23)"), "{msgs:?}");
+    assert!(has("Close both eyes tightly 1/3 (1/24)"), "{msgs:?}");
     assert!(has("Measure 2 more times before going to the next item"), "{msgs:?}");
-    assert!(has("Wink: Close the left eye only 1/3 (14/23)"), "{msgs:?}");
-    assert!(has("Raise only the right mouth corner: Mouth slightly open 1/3 (18/23)"), "{msgs:?}");
-    assert!(has("Read aloud with a neutral face Measure to start recording (21/23) e.g. The North Wind"), "{msgs:?}");
+    assert!(has("With the mouth open wide, push the lips forward into an \"O\" 1/3 (8/24)"), "{msgs:?}");
+    assert!(has("Wink: Close the left eye only 1/3 (15/24)"), "{msgs:?}");
+    assert!(has("Raise only the right mouth corner: Mouth slightly open 1/3 (19/24)"), "{msgs:?}");
+    assert!(has("Read aloud with a neutral face Measure to start recording (22/24) e.g. The North Wind"), "{msgs:?}");
     let rows = read_rows(&find(&d.join("out"), ".jsonl").unwrap());
     assert_eq!(rows[1]["item"], "Close both eyes tightly");
     assert_eq!(rows[1]["id"], "eyes_close");
