@@ -4,12 +4,13 @@ A Windows app that records VRChat face tracking (FT) values per expression. It l
 
 The results are meant as material for per-device FT settings (VR headset trackers, Selfie Expression, and so on).
 
-[日本語](#日本語)
+[日本語](#日本語) · Japanese manual (日本語の説明書): [docs/manual-ja/README.md](docs/manual-ja/README.md), also in the release zip as `manual-ja/index.html`
 
 ## Usage
 
 1. In VRChat, turn on OSC (Action Menu > Options > OSC > Enabled).
 2. Change into an avatar whose Avatar Descriptor forwards the Unified Expressions keys to parameters named `FT/In/<key>` (for example `FT/In/JawOpen`) with Face Tracking > Forward to Animator.
+   The public measuring avatar does this for all 102 keys: https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898 (change into it only while measuring; it forwards many parameters).
 3. Double-click `ft-measure.exe`. Check that the dot at the bottom of the window turns green when you move your face, enter a device name (for example `selfie`, `vive`) and an optional memo, and press Start.
 4. Make the expression shown in the window and in the chatbox, then press Measure.
 
@@ -83,9 +84,11 @@ Run `ft-measure.exe --help` for the full list. The main ones:
 VRChat のフェイストラッキング（FT）の値を、表情ごとに測って書き出す Windows のアプリです。
 
 1. VRChat で OSC をオンにします（アクションメニューの Options > OSC > Enabled）。
-2. Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>` のパラメータに出すアバターに着替えます。
+2. Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>` のパラメータに出すアバターに着替えます。公開の測るアバター（https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898 ）が 102 のキーをすべて出します。
 3. `ft-measure.exe` をダブルクリックし、右上で「日本語」を選びます。顔を動かして下の丸が緑になるのを確かめ、機器の名前とメモを入れて「始める」を押します。
 4. 窓と chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は D キー（→ や Enter でも可）、「取り消し」は A キー（← や Backspace でも可）です。キーは、この窓が選ばれているときに効きます。
+
+詳しい使い方は日本語の説明書（[docs/manual-ja/README.md](docs/manual-ja/README.md)、zip の `manual-ja/index.html`）にあります。
 
 書き出すのは `<名前>_<日時>.jsonl` の 1 つのファイルで、中身は英語です。1 行目に形の版 `format_version`、各行に項目の `id` が入ります。項目は exe に組み込みで、変えられません（`id` の一覧は英語の「Items」）。窓と chatbox には選んだ言語の名前が出ます。
 

@@ -19,13 +19,28 @@ jobs:
         run: cargo test --release
       - name: Build
         run: cargo build --release
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
       - name: Package
+        id: package
         shell: pwsh
         run: |
-          $dir = "ft-measure"
+          # The version is the tag without "v"; when run by hand, the version in Cargo.toml.
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          } else {
+            $version = (Select-String -Path Cargo.toml -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          }
+          $dir = "ft-measure-$version"
+          $zip = "ft-measure-$version-windows-x64.zip"
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           Copy-Item target/release/ft-measure.exe, README.md, LICENSE-MIT, LICENSE-APACHE -Destination $dir
-          Compress-Archive -Path $dir -DestinationPath ft-measure-windows-x64.zip -Force
+          # The Japanese manual (docs/manual-ja/README.md) as offline HTML
+          deno run --allow-read --allow-write scripts/manual-html.ts docs/manual-ja "$dir/manual-ja"
+          if ($LASTEXITCODE -ne 0) { throw "manual-html failed" }
+          Compress-Archive -Path $dir -DestinationPath $zip -Force
+          "zip=$zip" >> $env:GITHUB_OUTPUT
       - name: Check no VC runtime dependency
         shell: pwsh
         run: |
@@ -37,9 +52,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ft-measure-windows-x64
-          path: ft-measure-windows-x64.zip
+          path: ${{ steps.package.outputs.zip }}
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ft-measure-windows-x64.zip
+          files: ${{ steps.package.outputs.zip }}
