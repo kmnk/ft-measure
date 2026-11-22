@@ -14,7 +14,7 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Test
         run: cargo test --release
       - name: Build
@@ -49,12 +49,12 @@ jobs:
           $deps = & $dumpbin.FullName /dependents target/release/ft-measure.exe
           $deps
           if ($deps -match "VCRUNTIME") { throw "ft-measure.exe depends on the VC runtime" }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ft-measure-windows-x64
           path: ${{ steps.package.outputs.zip }}
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.package.outputs.zip }}
