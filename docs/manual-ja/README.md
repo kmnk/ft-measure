@@ -19,7 +19,7 @@ VR の機器とデスクトップ（VRChat の Selfie Expression）では、同�
 - Windows 10 か 11（64 ビット）
 - PC 版の VRChat（OSC をオンにする）
 - 測るアバターに着替えられること（「[測るアバターに着替える](#測るアバターに着替える)」）
-- VR の機器を測るときは、2026-11-02 以降の VRCFaceTracking
+- VR の機器を測るときは、VRChat のネイティブ FT に値を送る VRCFaceTracking（Steam 版の 2026-11-02 の更新「Avalonia Update」以降。Steam 版は自動で更新されます）
 
 ## 開き方
 
