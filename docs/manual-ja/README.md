@@ -36,7 +36,7 @@ FT Measure の exe にはコード署名がありません。初めて開くと�
 
 FT Measure は、VRChat が OSC で送るアバターのパラメータのうち、`FT/In/` で始まるものを記録します。ふつうのアバターはこのパラメータを出さないので、測るときは測るためのアバターに着替えます。
 
-- 測るアバター: https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898
+- 測るアバター: FT Measure Avatar（https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898 ）
 
 このアバターは、FT の 102 のキーをすべて `FT/In/<キーの名前>` に出します。パラメータの数が多いので、測るときだけ着替えてください。
 
