@@ -91,7 +91,7 @@ pub fn run(args: Args) -> i32 {
     match r {
         Ok(()) => 0,
         Err(e) => {
-            view::say(&format!("{}: {e}", tr("Cannot open the window", "窓を開けません")));
+            view::say(&format!("{}: {e}", tr("Cannot open the window", "ウィンドウを開けません")));
             1
         }
     }
@@ -360,7 +360,7 @@ impl App {
                     if focused {
                         ui.label(RichText::new(tr("Keyboard ready", "キーボードを受けられます")).weak());
                     } else {
-                        ui.label(RichText::new(tr("Click this window to use the keyboard", "キーボードを使うには、この窓をクリック")).color(AMBER));
+                        ui.label(RichText::new(tr("Click this window to use the keyboard", "キーボードを使うには、このウィンドウをクリック")).color(AMBER));
                     }
                 });
             }
