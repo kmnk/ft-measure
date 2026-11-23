@@ -2,7 +2,7 @@
 
 FT Measure（ft-measure）は、VRChat のフェイストラッキング（FT）の値を、表情ごとに測って記録のファイルに書く Windows のアプリです。このマニュアルは、FT Measure の zip に入れて配っている日本語のマニュアルです。英語の説明は、リポジトリの README（https://github.com/kmnk/ft-measure ）にあります。
 
-記録は、FT の設定を作る Unity のツール Face Tracking Generator（FTG）で読めます。FTG の使い方は、FTG のマニュアル（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md ）にあります。
+記録は、FT の設定を作成する Unity のツール Face Tracking Generator（FTG）で読めます。FTG の使い方は、FTG のマニュアル（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md ）にあります。
 
 ## はじめに
 
