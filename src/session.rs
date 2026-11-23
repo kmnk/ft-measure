@@ -248,7 +248,7 @@ impl Session {
             }
             Record::Interval { samples, .. } => {
                 if samples.is_empty() {
-                    return Some(tr("Record the reading with Measure before going to the next item", "測定で区間を記録してから次へ進めます").into());
+                    return Some(tr("Record the reading with Measure before going to the next item", "「測る」で区間を記録してから次へ進めます").into());
                 }
                 0
             }
@@ -316,11 +316,11 @@ impl Session {
                     _ => String::new(),
                 };
                 if *recording {
-                    (name, tr("recording, Measure to stop", "記録中 測定で止める").to_string(), read)
+                    (name, tr("recording, Measure to stop", "記録中 「測る」で止める").to_string(), read)
                 } else if !samples.is_empty() {
                     (name, tr("recorded", "記録済み").to_string(), next_hint)
                 } else {
-                    (name, tr("Measure to start recording", "測定で始める").to_string(), read)
+                    (name, tr("Measure to start recording", "「測る」で始める").to_string(), read)
                 }
             }
         };

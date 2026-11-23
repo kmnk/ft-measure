@@ -291,7 +291,7 @@ fn e2e_full_run_last_name_and_kill() {
     assert!(msgs.iter().filter(|x| x.contains("ウィンク: 右目だけ閉じる 2/3（15/24）")).count() >= 2, "取り消しの後に同じ向きが出ていない: {msgs:?}");
     assert!(has("右の口角だけを上げて: 口を閉じる 1/3（19/24）"), "{msgs:?}");
     assert!(has("左の口角だけを上げて: 口を少し開ける 3/3（20/24）"), "{msgs:?}");
-    assert!(has("無表情で読み上げ 測定で始める（22/24） 例: あめんぼ赤いな"), "{msgs:?}");
+    assert!(has("無表情で読み上げ 「測る」で始める（22/24） 例: あめんぼ赤いな"), "{msgs:?}");
     assert!(has("無表情で読み上げ 記録中"), "{msgs:?}");
     assert!(has("測定が終わりました"), "{msgs:?}");
     assert!(!has("動いていた"), "{msgs:?}");
