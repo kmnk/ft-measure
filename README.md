@@ -4,7 +4,7 @@ A Windows app that records VRChat face tracking (FT) values per expression. It l
 
 The results are meant as material for per-device FT settings (VR headset trackers, Selfie Expression, and so on).
 
-[日本語](#日本語) · Japanese manual (日本語の説明書): [docs/manual-ja/README.md](docs/manual-ja/README.md), also in the release zip as `manual-ja/index.html`
+[日本語](#日本語) · Japanese manual (日本語のマニュアル): [docs/manual-ja/README.md](docs/manual-ja/README.md), also in the release zip as `manual-ja/index.html`
 
 ## Usage
 
@@ -88,7 +88,7 @@ VRChat のフェイストラッキング（FT）の値を、表情ごとに測�
 3. `ft-measure.exe` をダブルクリックし、右上で「日本語」を選びます。顔を動かして下の丸が緑になるのを確認し、機器の名前とメモを入れて「始める」を押します。
 4. ウィンドウと chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は D キー（→ や Enter でも可）、「取り消し」は A キー（← や Backspace でも可）です。キーは、このウィンドウが選ばれているときだけ使えます。
 
-詳しい使い方は日本語の説明書（[docs/manual-ja/README.md](docs/manual-ja/README.md)、zip の `manual-ja/index.html`）にあります。
+詳しい使い方は日本語のマニュアル（[docs/manual-ja/README.md](docs/manual-ja/README.md)、zip の `manual-ja/index.html`）にあります。
 
 書き出すのは `<名前>_<日時>.jsonl` の 1 つのファイルで、中身は英語です。1 行目にファイルの形式のバージョン `format_version`、各行に項目の `id` が入ります。項目は exe に組み込みで、変えられません（`id` の一覧は英語の「Items」）。ウィンドウと chatbox には選んだ言語の名前が出ます。
 

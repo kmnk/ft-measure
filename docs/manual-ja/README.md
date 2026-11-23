@@ -1,8 +1,8 @@
-# FT Measure 説明書
+# FT Measure マニュアル
 
-FT Measure（ft-measure）は、VRChat のフェイストラッキング（FT）の値を、表情ごとに測って記録のファイルに書く Windows のアプリです。この説明書は、FT Measure の zip に入れて配っている日本語の説明書です。英語の説明は、リポジトリの README（https://github.com/kmnk/ft-measure ）にあります。
+FT Measure（ft-measure）は、VRChat のフェイストラッキング（FT）の値を、表情ごとに測って記録のファイルに書く Windows のアプリです。このマニュアルは、FT Measure の zip に入れて配っている日本語のマニュアルです。英語の説明は、リポジトリの README（https://github.com/kmnk/ft-measure ）にあります。
 
-記録は、FT の設定を作る Unity のツール Face Tracking Generator（FTG）で読めます。FTG の使い方は、FTG の説明書（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md ）にあります。
+記録は、FT の設定を作る Unity のツール Face Tracking Generator（FTG）で読めます。FTG の使い方は、FTG のマニュアル（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md ）にあります。
 
 ## はじめに
 
@@ -82,7 +82,7 @@ VR の機器とデスクトップの両方を使うときは、それぞれで�
 
 ## 記録を FTG に読ませる
 
-FTG の設定エディタの **Devices** タブで、**Add VR recording** か **Add Desktop recording** を押し、記録のファイルを選びます。読み方は、FTG の説明書の「VR とデスクトップで分ける」の節（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md#vr-とデスクトップで分ける ）にあります。
+FTG の設定エディタの **Devices** タブで、**Add VR recording** か **Add Desktop recording** を押し、記録のファイルを選びます。読み方は、FTG のマニュアルの「VR とデスクトップで分ける」の節（https://github.com/kmnk/VRChat_FaceTrackingGenerator/blob/main/docs/manual-ja/README.md#vr-とデスクトップで分ける ）にあります。
 
 ## 画面ごとの説明
 
