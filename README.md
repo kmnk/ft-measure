@@ -84,7 +84,7 @@ Run `ft-measure.exe --help` for the full list. The main ones:
 VRChat のフェイストラッキング（FT）の値を、表情ごとに測って書き出す Windows のアプリです。
 
 1. VRChat で OSC をオンにします（アクションメニューの Options > OSC > Enabled）。
-2. Face Tracking の Forward to Animator で、Unified Expressions のキーを `FT/In/<キーの名前>` のパラメータに出すアバターに着替えます。公開の測定用アバター FTMeasureAvatar（https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898 ）が 102 のキーをすべて出します。
+2. Face Tracking の Forward to Animator で、Unified Expressions のトラッキングキーを `FT/In/<トラッキングキーの名前>` のパラメータに出すアバターに着替えます。公開の測定用アバター FTMeasureAvatar（https://vrchat.com/home/avatar/avtr_112d1877-a76d-442f-820d-41d34d402898 ）が 102 のキーをすべて出します。
 3. `ft-measure.exe` をダブルクリックし、右上で「日本語」を選びます。顔を動かして下の丸が緑になるのを確認し、機器の名前とメモを入れて「始める」を押します。
 4. ウィンドウと chatbox に出る表情を作り、「測る」（スペース）を押します。「次へ」は D キー（→ や Enter でも可）、「取り消し」は A キー（← や Backspace でも可）です。キーは、このウィンドウが選ばれているときだけ使えます。
 
